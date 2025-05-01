@@ -1,10 +1,42 @@
 // resources/js/admin/src/components/pageBuilder/ComponentSettings.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 const ComponentSettings = ({ component, componentDefinition, onSave, onCancel }) => {
-	const [settings, setSettings] = useState(component.props || {});
+	// Parse schema if it's a string
+	const schema = componentDefinition && componentDefinition.schema
+		? (typeof componentDefinition.schema === 'string'
+			? JSON.parse(componentDefinition.schema)
+			: componentDefinition.schema)
+		: null;
+
+	// Initialize settings with existing props or defaults from schema
+	const [settings, setSettings] = useState(() => {
+		// Start with current component props
+		const initialSettings = { ...component.props };
+
+		// For any missing props that have defaults in the schema, add them
+		if (schema && schema.properties) {
+			Object.keys(schema.properties).forEach(key => {
+				if (initialSettings[key] === undefined && schema.properties[key].default !== undefined) {
+					// Handle arrays by parsing default if it's a string
+					if (schema.properties[key].type === 'array' && typeof schema.properties[key].default === 'string') {
+						try {
+							initialSettings[key] = JSON.parse(schema.properties[key].default);
+						} catch (e) {
+							console.error('Error parsing default array value:', e);
+							initialSettings[key] = [];
+						}
+					} else {
+						initialSettings[key] = schema.properties[key].default;
+					}
+				}
+			});
+		}
+
+		return initialSettings;
+	});
 
 	const handleChange = (e) => {
 		const { name, value, type, checked } = e.target;
@@ -22,12 +54,22 @@ const ComponentSettings = ({ component, componentDefinition, onSave, onCancel })
 	};
 
 	const handleSubmit = (e) => {
-		e.preventDefault();
-		onSave(settings);
+		// Prevent default form submission which causes page reload
+		if (e) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+
+		// Log before saving for debugging
+		console.log('Saving component settings:', settings);
+
+		// Make a copy of settings to ensure arrays and objects are properly handled
+		const settingsCopy = JSON.parse(JSON.stringify(settings));
+		onSave(settingsCopy);
 	};
 
 	const renderField = (key, schema) => {
-		const value = settings[key] || '';
+		const value = settings[key] !== undefined ? settings[key] : '';
 		const type = schema.type || 'text';
 
 		switch (type) {
@@ -126,6 +168,34 @@ const ComponentSettings = ({ component, componentDefinition, onSave, onCancel })
 						</button>
 					</div>
 				);
+			case 'array':
+				// Display a note for array fields - In a real app, you'd implement a dynamic array editor
+				return (
+					<div className="bg-gray-50 p-3 rounded border border-gray-200">
+						<p className="text-sm text-gray-600 mb-2">
+							{schema.description || 'Edit array items:'}
+						</p>
+						<div className="text-sm text-gray-500">
+							{Array.isArray(value) ? (
+								<div>
+									<p>{value.length} items in this collection</p>
+									<button
+										type="button"
+										className="mt-2 px-3 py-1 text-xs font-medium border border-gray-200 rounded-md bg-white hover:bg-gray-50"
+										onClick={() => {
+											// In a real app, this would open a modal to edit array items
+											alert('This would open a detailed editor for array items');
+										}}
+									>
+										Edit Collection Items
+									</button>
+								</div>
+							) : (
+								<p>No items yet. This would be an array editor in the full implementation.</p>
+							)}
+						</div>
+					</div>
+				);
 			default:
 				return (
 					<input
@@ -140,7 +210,7 @@ const ComponentSettings = ({ component, componentDefinition, onSave, onCancel })
 		}
 	};
 
-	if (!componentDefinition || !componentDefinition.schema || !componentDefinition.schema.properties) {
+	if (!componentDefinition || !schema || !schema.properties) {
 		return (
 			<div className="p-4">
 				<p>No settings available for this component.</p>
@@ -158,17 +228,17 @@ const ComponentSettings = ({ component, componentDefinition, onSave, onCancel })
 	}
 
 	return (
-		<form onSubmit={handleSubmit}>
+		<form onSubmit={handleSubmit} className="component-settings-form">
 			<div className="max-h-[60vh] overflow-y-auto p-2">
 				<div className="space-y-4">
-					{Object.keys(componentDefinition.schema.properties).map((key) => (
+					{Object.keys(schema.properties).map((key) => (
 						<div key={key}>
 							<label htmlFor={key} className="block text-sm font-medium text-gray-700">
-								{componentDefinition.schema.properties[key].label || key}
+								{schema.properties[key].label || key}
 							</label>
-							{renderField(key, componentDefinition.schema.properties[key])}
-							{componentDefinition.schema.properties[key].description && (
-								<p className="mt-1 text-xs text-gray-500">{componentDefinition.schema.properties[key].description}</p>
+							{renderField(key, schema.properties[key])}
+							{schema.properties[key].description && (
+								<p className="mt-1 text-xs text-gray-500">{schema.properties[key].description}</p>
 							)}
 						</div>
 					))}
@@ -183,7 +253,8 @@ const ComponentSettings = ({ component, componentDefinition, onSave, onCancel })
 					Cancel
 				</button>
 				<button
-					type="submit"
+					type="button"
+					onClick={handleSubmit}
 					className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 				>
 					Save

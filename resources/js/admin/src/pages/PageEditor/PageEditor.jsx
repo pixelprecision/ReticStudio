@@ -55,19 +55,41 @@ const PageEditor = () => {
 			const response = await getPage(id);
 			const pageData = response.data;
 
-			// Ensure the content is an array
-			const contentArray = Array.isArray(pageData.content) ? pageData.content : [];
+			// Parse content properly - handle both string and array formats
+			let contentArray = [];
+			if (pageData.content) {
+				if (Array.isArray(pageData.content)) {
+					contentArray = pageData.content;
+				} else if (typeof pageData.content === 'string') {
+					try {
+						// Try to parse if it's a JSON string
+						contentArray = JSON.parse(pageData.content);
+						if (!Array.isArray(contentArray)) {
+							console.warn('Content parsed to non-array value:', contentArray);
+							contentArray = [];
+						}
+					} catch (e) {
+						console.error('Error parsing page content string:', e);
+						contentArray = [];
+					}
+				} else {
+					console.warn('Unexpected content format:', typeof pageData.content);
+				}
+			}
+
+			// Log for debugging
+			console.log('Parsed page content:', contentArray);
 
 			setFormData({
-				            title: pageData.title || '',
-				            slug: pageData.slug || '',
-				            description: pageData.description || '',
-				            content: contentArray,
-				            meta_title: pageData.meta_title || '',
-				            meta_description: pageData.meta_description || '',
-				            meta_keywords: pageData.meta_keywords || '',
-				            is_published: pageData.is_published || false,
-			            });
+				title: pageData.title || '',
+				slug: pageData.slug || '',
+				description: pageData.description || '',
+				content: contentArray,
+				meta_title: pageData.meta_title || '',
+				meta_description: pageData.meta_description || '',
+				meta_keywords: pageData.meta_keywords || '',
+				is_published: pageData.is_published || false,
+			});
 		} catch (error) {
 			console.error('Error fetching page:', error);
 			showToast('Error', 'Failed to fetch page data', 'error');
@@ -100,24 +122,51 @@ const PageEditor = () => {
 	};
 
 	const handlePageBuilderChange = (components) => {
-		setFormData(prev => ({ ...prev, content: components }));
+		// Make a copy to ensure we don't have reference issues with nested objects
+		const componentsCopy = JSON.parse(JSON.stringify(components));
+		setFormData(prev => ({ ...prev, content: componentsCopy }));
 
 		// Clear error for content field
 		if (formErrors.content) {
 			setFormErrors(prev => ({ ...prev, content: null }));
 		}
+
+		// Debug the components being saved
+		console.log('Updated page components:', componentsCopy);
 	};
 
 	const handleSubmit = async (e) => {
-		e.preventDefault();
+		// Always prevent the default form submission which would reload the page
+		if (e) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+
+		// Don't proceed if already in the saving state
+		if (saving) {
+			return;
+		}
+
 		setSaving(true);
 
 		try {
+			// Create a deep copy of the form data to ensure proper serialization
+			const formDataCopy = JSON.parse(JSON.stringify(formData));
+
+			// Ensure content array is serialized properly
+			if (Array.isArray(formDataCopy.content)) {
+				console.log('Saving content array with length:', formDataCopy.content.length);
+			} else {
+				console.warn('Content is not an array before saving:', formDataCopy.content);
+				// Ensure content is at least an empty array if it's not already an array
+				formDataCopy.content = [];
+			}
+
 			if (isEditing) {
-				await updatePage(id, formData);
+				await updatePage(id, formDataCopy);
 				showToast('Success', 'Page updated successfully', 'success');
 			} else {
-				const response = await createPage(formData);
+				const response = await createPage(formDataCopy);
 				showToast('Success', 'Page created successfully', 'success');
 				// Navigate to edit page with the new ID
 				navigate(`/admin/pages/edit/${response.data.id}`);
@@ -172,7 +221,7 @@ const PageEditor = () => {
 
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 				<div className="lg:col-span-2">
-					<form onSubmit={handleSubmit} className="space-y-6">
+					<form onSubmit={(e) => {e.preventDefault(); handleSubmit(e);}} className="space-y-6">
 						<div className="card bg-white shadow rounded-lg p-6">
 							<div className="mb-4">
 								<label htmlFor="title" className="block text-sm font-medium text-gray-700">Title</label>
@@ -330,7 +379,8 @@ const PageEditor = () => {
 								</Link>
 							)}
 							<button
-								type="submit"
+								type="button"
+									onClick={handleSubmit}
 								disabled={saving}
 								className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 							>

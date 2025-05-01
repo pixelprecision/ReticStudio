@@ -46,11 +46,25 @@ const PageBuilder = ({ value, onChange }) => {
 	};
 
 	const handleAddComponent = (component) => {
+		// Parse the schema if it's a string
+		const schema = typeof component.schema === 'string' ? JSON.parse(component.schema) : component.schema;
+
 		const newComponent = {
 			id: `${component.slug}-${Date.now()}`,
 			type: component.slug,
-			props: component.schema.properties ? Object.keys(component.schema.properties).reduce((acc, key) => {
-				acc[key] = component.schema.properties[key].default || '';
+			props: schema && schema.properties ? Object.keys(schema.properties).reduce((acc, key) => {
+				const prop = schema.properties[key];
+				// Special handling for array types
+				if (prop.type === 'array' && typeof prop.default === 'string') {
+					try {
+						acc[key] = JSON.parse(prop.default);
+					} catch (e) {
+						console.error('Error parsing default array value:', e);
+						acc[key] = [];
+					}
+				} else {
+					acc[key] = prop.default !== undefined ? prop.default : '';
+				}
 				return acc;
 			}, {}) : {},
 		};
@@ -59,7 +73,8 @@ const PageBuilder = ({ value, onChange }) => {
 		setPageComponents(updatedComponents);
 
 		if (onChange) {
-			onChange(updatedComponents);
+			// Create a deep copy to ensure nested objects are properly handled
+			onChange(JSON.parse(JSON.stringify(updatedComponents)));
 		}
 	};
 
@@ -69,7 +84,8 @@ const PageBuilder = ({ value, onChange }) => {
 		setPageComponents(updatedComponents);
 
 		if (onChange) {
-			onChange(updatedComponents);
+			// Create a deep copy to ensure nested objects are properly handled
+			onChange(JSON.parse(JSON.stringify(updatedComponents)));
 		}
 	};
 
@@ -85,34 +101,79 @@ const PageBuilder = ({ value, onChange }) => {
 		setPageComponents(updatedComponents);
 
 		if (onChange) {
-			onChange(updatedComponents);
+			// Create a deep copy to ensure nested objects are properly handled
+			onChange(JSON.parse(JSON.stringify(updatedComponents)));
 		}
 	};
 
-	const handleSettingsOpen = (component, index) => {
+	const handleSettingsOpen = (component, index, event) => {
+		// Prevent any page reload or form submission
+		if (event) {
+			event.preventDefault();
+			event.stopPropagation();
+		}
+
+		const componentDefinition = components.find(c => c.slug === component.type);
+
+		// Log parsed component data for debugging
+		if (componentDefinition && typeof componentDefinition.schema === 'string') {
+			try {
+				const parsedSchema = JSON.parse(componentDefinition.schema);
+				console.log('Component Definition with parsed schema:', {
+					...componentDefinition,
+					schema: parsedSchema
+				});
+			} catch (error) {
+				console.error('Error parsing schema:', error);
+			}
+		}
+
 		setActiveComponent({ component, index });
 		setShowSettings(true);
 	};
 
-	const handleSettingsClose = () => {
+	const handleSettingsClose = (event) => {
+		// Prevent any page reload or form submission
+		if (event) {
+			event.preventDefault();
+			event.stopPropagation();
+		}
+
 		setActiveComponent(null);
 		setShowSettings(false);
 	};
 
 	const handleSettingsSave = (updatedProps) => {
-		const { index } = activeComponent;
-		const updatedComponents = [...pageComponents];
-		updatedComponents[index] = {
-			...updatedComponents[index],
-			props: updatedProps,
-		};
-
-		setPageComponents(updatedComponents);
-
-		if (onChange) {
-			onChange(updatedComponents);
+		if (!activeComponent) {
+			console.error('No active component found when saving settings');
+			return;
 		}
 
+		const { index } = activeComponent;
+		const updatedComponents = [...pageComponents];
+
+		// Create a deep copy of the updated props
+		const updatedPropsCopy = JSON.parse(JSON.stringify(updatedProps));
+
+		// Update the component with the new props
+		updatedComponents[index] = {
+			...updatedComponents[index],
+			props: updatedPropsCopy,
+		};
+
+		// Console log for debugging
+		console.log('Saving updated component:', updatedComponents[index]);
+
+		// Update the local state first
+		setPageComponents(updatedComponents);
+
+		// Then notify the parent component
+		if (onChange) {
+			// Pass a deep copy to ensure all nested objects are properly passed
+			onChange(JSON.parse(JSON.stringify(updatedComponents)));
+		}
+
+		// Close the modal
 		setShowSettings(false);
 		setActiveComponent(null);
 	};
@@ -127,7 +188,8 @@ const PageBuilder = ({ value, onChange }) => {
 		setPageComponents(items);
 
 		if (onChange) {
-			onChange(items);
+			// Create a deep copy to ensure nested objects are properly handled
+			onChange(JSON.parse(JSON.stringify(items)));
 		}
 	};
 
@@ -142,13 +204,37 @@ const PageBuilder = ({ value, onChange }) => {
 			);
 		}
 
-		// In a real application, you would render the actual component based on its template
-		// This is just a simplified preview
+		// Get a preview of important properties to display
+		const getPreviewContent = () => {
+			// Try to render the most meaningful properties first
+			if (component.props.title) {
+				return (
+					<div>
+						<strong>{component.props.title}</strong>
+						{component.props.subtitle && <div className="text-sm">{component.props.subtitle}</div>}
+					</div>
+				);
+			} else if (component.props.text) {
+				return <div>{component.props.text}</div>;
+			} else if (component.props.content) {
+				return <div dangerouslySetInnerHTML={{ __html: component.props.content }} />;
+			} else {
+				// Create a summary of props
+				const propSummary = Object.entries(component.props)
+					.filter(([key, value]) => value && typeof value !== 'object' && key !== 'alignment' && key !== 'style')
+					.slice(0, 3)
+					.map(([key, value]) => `${key}: ${value}`)
+					.join(', ');
+
+				return propSummary || 'Component preview';
+			}
+		};
+
 		return (
 			<div className="p-4 bg-gray-50 border border-gray-200 rounded">
 				<h3 className="text-md font-medium">{componentDefinition.name}</h3>
 				<div className="mt-2 text-sm text-gray-500">
-					{component.props.text || component.props.content || 'Component preview'}
+					{getPreviewContent()}
 				</div>
 			</div>
 		);
@@ -230,17 +316,17 @@ const PageBuilder = ({ value, onChange }) => {
 														 {!previewMode && (
 															 <div className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-t-lg border-b border-gray-200">
 																 <div className="flex items-center">
-                                  <span {...provided.dragHandleProps}>
-                                    <FiMove className="text-gray-400 mr-2 cursor-move" />
-                                  </span>
+									                              <span {...provided.dragHandleProps}>
+									                                <FiMove className="text-gray-400 mr-2 cursor-move" />
+									                              </span>
 																	 <span className="text-sm font-medium">
-                                    {components.find(c => c.slug === component.type)?.name || component.type}
-                                  </span>
+									                                {components.find(c => c.slug === component.type)?.name || component.type}
+									                              </span>
 																 </div>
 																 <div className="flex space-x-2">
 																	 <button
 																		 type="button"
-																		 onClick={() => handleSettingsOpen(component, index)}
+																		 onClick={(e) => handleSettingsOpen(component, index, e)}
 																		 className="text-gray-500 hover:text-gray-700"
 																	 >
 																		 <FiSettings size={16} />
@@ -280,15 +366,30 @@ const PageBuilder = ({ value, onChange }) => {
 
 			{/* Component Settings Modal */}
 			{showSettings && activeComponent && (
-				<div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-					<div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+				<div
+					className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+					onClick={(e) => {
+						// Only close if clicking the background overlay, not the modal itself
+						if (e.target === e.currentTarget) {
+							handleSettingsClose(e);
+						}
+					}}
+				>
+					<div
+						className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white"
+						onClick={(e) => e.stopPropagation()} // Prevent clicks inside modal from closing it
+					>
 						<div className="flex justify-between items-center mb-4">
 							<h3 className="text-lg font-medium text-gray-900">
 								{components.find(c => c.slug === activeComponent.component.type)?.name || 'Component'} Settings
 							</h3>
 							<button
 								type="button"
-								onClick={handleSettingsClose}
+								onClick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									handleSettingsClose(e);
+								}}
 								className="text-gray-400 hover:text-gray-500"
 							>
 								<span className="sr-only">Close</span>
