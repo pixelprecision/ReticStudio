@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+	.btn {
+		@apply px-4 py-2 rounded font-medium focus:outline-none focus:ring-2 focus:ring-offset-2;
+	}
+
+	.btn-primary {
+		@apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+	}
+
+	.btn-secondary {
+		@apply bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500;
+	}
+
+	.btn-success {
+		@apply bg-green-600 text-white hover:bg-green-700 focus:ring-green-500;
+	}
+
+	.btn-danger {
+		@apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+	}
+
+	.form-input {
+		@apply mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500;
+	}
+
+	.form-label {
+		@apply block text-sm font-medium text-gray-700;
+	}
+
+	.card {
+		@apply bg-white rounded-lg shadow p-6;
+	}
+}
