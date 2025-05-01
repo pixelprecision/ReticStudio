@@ -37,3 +37,7 @@ export const getPublicPage = (slug) => {
 export const getPreviewPage = (slug) => {
 	return apiClient.get(`/pages/preview/${slug}`);
 };
+
+export const getHomePage = () => {
+	return apiClient.get('/pages/home');
+};

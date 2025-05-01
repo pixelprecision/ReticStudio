@@ -122,8 +122,8 @@ const App = () => {
 			<Route path="/:slug" element={<PublicPage isPreview={false} />} />
 			<Route path="/preview/:slug" element={<PublicPage isPreview={true} />} />
 
-			{/* Redirect root to the first page or home page */}
-			<Route path="/" element={<Navigate to="/page/home" />} />
+			{/* Home page route */}
+			<Route path="/" element={<PublicPage isPreview={false} />} />
 
 			{/* Fallback - redirect to admin dashboard if authenticated, or login if not */}
 			<Route path="*" element={<Navigate to="/admin/dashboard" />} />

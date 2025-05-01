@@ -8,6 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
     @viteReactRefresh
     @vite('resources/js/admin/src/index.js')
+    <script>
+        // Pass the isHomePage flag to the frontend
+        window.isHomePage = {{ isset($isHomePage) && $isHomePage ? 'true' : 'false' }};
+    </script>
 </head>
 <body class="font-sans antialiased bg-gray-100">
     <div id="root"></div>

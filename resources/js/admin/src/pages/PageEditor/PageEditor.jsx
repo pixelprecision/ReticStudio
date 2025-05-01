@@ -1,11 +1,10 @@
-// resources/js/admin/src/pages/pages/PageEditor.jsx
+// resources/js/admin/src/pages/PageEditor/PageEditor.jsx
 import React, { useState, useEffect } from 'react';
 import {useParams, useNavigate, Link} from 'react-router-dom';
 import { getPage, createPage, updatePage, getPageRevisions, restorePageRevision } from '../../api/pagesApi';
 import { showToast } from '../../api/apiClient';
 import PageHeader from '../../components/common/PageHeader';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import PageBuilder from '../../components/pageBuilder/PageBuilder';
 
 const PageEditor = () => {
 	const { id } = useParams();
@@ -22,7 +21,7 @@ const PageEditor = () => {
 		                                         title: '',
 		                                         slug: '',
 		                                         description: '',
-		                                         content: '',
+		                                         content: [],
 		                                         meta_title: '',
 		                                         meta_description: '',
 		                                         meta_keywords: '',
@@ -56,28 +55,14 @@ const PageEditor = () => {
 			const response = await getPage(id);
 			const pageData = response.data;
 
-			// Convert content blocks to HTML string for ReactQuill
-			const htmlContent = (pageData.content || [])
-				.map((block) => {
-					if (block.type === 'heading') {
-						const level = block.props.level || 'h1';
-						const align = block.props.alignment ? ` style="text-align:${block.props.alignment}"` : '';
-						return `<${level}${align}>${block.props.text}</${level}>`;
-					} else if (block.type === 'text') {
-						return block.props.content;
-					} else if (block.type === 'button') {
-						// Optional: represent button as a placeholder or skip it
-						return `<p><a href="${block.props.link}" class="btn btn-${block.props.style}">${block.props.text}</a></p>`;
-					}
-					return '';
-				})
-				.join('\n');
+			// Ensure the content is an array
+			const contentArray = Array.isArray(pageData.content) ? pageData.content : [];
 
 			setFormData({
 				            title: pageData.title || '',
 				            slug: pageData.slug || '',
 				            description: pageData.description || '',
-				            content: htmlContent,
+				            content: contentArray,
 				            meta_title: pageData.meta_title || '',
 				            meta_description: pageData.meta_description || '',
 				            meta_keywords: pageData.meta_keywords || '',
@@ -114,8 +99,8 @@ const PageEditor = () => {
 		}
 	};
 
-	const handleEditorChange = (content) => {
-		setFormData(prev => ({ ...prev, content }));
+	const handlePageBuilderChange = (components) => {
+		setFormData(prev => ({ ...prev, content: components }));
 
 		// Clear error for content field
 		if (formErrors.content) {
@@ -188,7 +173,7 @@ const PageEditor = () => {
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 				<div className="lg:col-span-2">
 					<form onSubmit={handleSubmit} className="space-y-6">
-						<div className="card">
+						<div className="card bg-white shadow rounded-lg p-6">
 							<div className="mb-4">
 								<label htmlFor="title" className="block text-sm font-medium text-gray-700">Title</label>
 								<input
@@ -235,28 +220,7 @@ const PageEditor = () => {
 								{formErrors.description && <p className="mt-1 text-sm text-red-600">{formErrors.description}</p>}
 							</div>
 
-							<div className="mb-4">
-								<label htmlFor="content" className="block text-sm font-medium text-gray-700">Content</label>
-								<div className={`mt-1 ${formErrors.content ? 'border border-red-500 rounded-md' : ''}`}>
-									<ReactQuill
-										theme="snow"
-										value={formData.content}
-										onChange={handleEditorChange}
-										modules={{
-											toolbar: [
-												[{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-												['bold', 'italic', 'underline', 'strike', 'blockquote'],
-												[{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
-												['link', 'image'],
-												['clean']
-											],
-										}}
-									/>
-								</div>
-								{formErrors.content && <p className="mt-1 text-sm text-red-600">{formErrors.content}</p>}
-							</div>
-
-							<div className="flex items-center">
+							<div className="flex items-center mb-4">
 								<input
 									id="is_published"
 									name="is_published"
@@ -268,6 +232,20 @@ const PageEditor = () => {
 								<label htmlFor="is_published" className="ml-2 block text-sm text-gray-900">
 									Published
 								</label>
+							</div>
+						</div>
+
+						{/* Page Builder Component */}
+						<div className="card">
+							<div className="mb-4">
+								<label className="block text-sm font-medium text-gray-700 mb-2">Page Content</label>
+								<div className={formErrors.content ? 'border border-red-500 rounded-md' : ''}>
+									<PageBuilder
+										value={formData.content}
+										onChange={handlePageBuilderChange}
+									/>
+								</div>
+								{formErrors.content && <p className="mt-1 text-sm text-red-600">{formErrors.content}</p>}
 							</div>
 						</div>
 

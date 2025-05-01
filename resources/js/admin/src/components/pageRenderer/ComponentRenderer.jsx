@@ -3,6 +3,16 @@ import React from 'react';
 import HeadingComponent from './components/HeadingComponent';
 import TextComponent from './components/TextComponent';
 import ButtonComponent from './components/ButtonComponent';
+import ImageComponent from './components/ImageComponent';
+import DividerComponent from './components/DividerComponent';
+import TailwindHeroComponent from './components/TailwindHeroComponent';
+import VideoHeroComponent from './components/VideoHeroComponent';
+import PricingComponent from './components/PricingComponent';
+import TeamComponent from './components/TeamComponent';
+import PortfolioComponent from './components/PortfolioComponent';
+import ProcessStepComponent from './components/ProcessStepComponent';
+import StatsComponent from './components/StatsComponent';
+import TestimonialsComponent from './components/TestimonialsComponent';
 
 /**
  * Component that renders different components based on their type
@@ -17,6 +27,16 @@ const ComponentRenderer = ({ component }) => {
     heading: HeadingComponent,
     text: TextComponent,
     button: ButtonComponent,
+    image: ImageComponent,
+    divider: DividerComponent,
+    tailwindhero: TailwindHeroComponent,
+    videohero: VideoHeroComponent,
+    pricing: PricingComponent,
+    team: TeamComponent,
+    portfolio: PortfolioComponent,
+    process: ProcessStepComponent,
+    stats: StatsComponent,
+    testimonials: TestimonialsComponent,
     // Add more component types here as needed
   };
 

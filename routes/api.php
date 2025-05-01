@@ -39,6 +39,7 @@ Route::get('forms/{slug}/public', [FormController::class, 'getPublicForm']);
 Route::post('forms/{slug}/submit', [FormSubmissionController::class, 'submit']);
 Route::get('menus/{slug}/public', [MenuController::class, 'getPublicMenu']);
 Route::get('themes/active', [ThemeController::class, 'getActiveTheme']);
+Route::get('pages/home', [PageController::class, 'getHomePage']);
 Route::get('pages/by-slug/{slug}', [PageController::class, 'getPublicPage']);
 Route::get('pages/preview/{slug}', [PageController::class, 'getPreviewPage']);
 
@@ -48,10 +49,10 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::apiResource('pages', PageController::class);
 	Route::get('pages/{id}/revisions', [PageController::class, 'revisions']);
 	Route::post('pages/{id}/revisions/{revisionId}/restore', [PageController::class, 'restoreRevision']);
-	
+
 	// Components
 	Route::apiResource('components', ComponentController::class);
-	
+
 	// Forms
 	Route::apiResource('forms', FormController::class);
 	Route::get('forms/{formId}/submissions', [FormSubmissionController::class, 'index']);
@@ -60,17 +61,17 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::post('forms/{formId}/submissions/{id}/mark-as-not-spam', [FormSubmissionController::class, 'markAsNotSpam']);
 	Route::delete('forms/{formId}/submissions/{id}', [FormSubmissionController::class, 'destroy']);
 	Route::get('forms/{formId}/export', [FormSubmissionController::class, 'export']);
-	
+
 	// Settings
 	Route::get('settings', [SettingController::class, 'index']);
 	Route::get('settings/{key}', [SettingController::class, 'show']);
 	Route::put('settings/{key}', [SettingController::class, 'update']);
 	Route::post('settings/batch', [SettingController::class, 'updateBatch']);
-	
+
 	// Themes
 	Route::apiResource('themes', ThemeController::class);
 	Route::post('themes/{id}/activate', [ThemeController::class, 'activate']);
-	
+
 	// Media
 	Route::get('media', [MediaController::class, 'index']);
 	Route::post('media', [MediaController::class, 'store']);
@@ -81,10 +82,10 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::post('media-collections', [MediaController::class, 'createCollection']);
 	Route::put('media-collections/{id}', [MediaController::class, 'updateCollection']);
 	Route::delete('media-collections/{id}', [MediaController::class, 'deleteCollection']);
-	
+
 	// Menus
 	Route::apiResource('menus', MenuController::class);
-	
+
 	// Plugins
 	Route::get('plugins', [PluginController::class, 'index']);
 	Route::get('plugins/{id}', [PluginController::class, 'show']);
