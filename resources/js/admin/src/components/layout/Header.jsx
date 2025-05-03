@@ -29,7 +29,7 @@ const Header = ({ onMenuButtonClick }) => {
 						</svg>
 					</button>
 					<div className="ml-4 md:ml-0">
-						<h1 className="text-xl font-bold md:hidden">LaravelCMS Builder</h1>
+						<h1 className="text-xl font-bold md:hidden">Retic Laravel Studio</h1>
 					</div>
 				</div>
 				<div className="ml-4 flex items-center md:ml-6">

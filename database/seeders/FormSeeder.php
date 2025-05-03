@@ -94,7 +94,7 @@
 					[
 						'name' => 'consent',
 						'type' => 'checkbox',
-						'label' => 'I agree to receive emails from LaravelCMS Builder.',
+						'label' => 'I agree to receive emails from Retic Laravel Studio.',
 						'required' => true,
 						'order' => 3,
 					],

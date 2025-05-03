@@ -1,6 +1,7 @@
 // resources/js/admin/src/components/pageRenderer/components/ButtonComponent.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { extractArbitraryStyles, processArbitraryClasses } from '../../../utils/tailwindUtils';
 
 const ButtonComponent = ({ 
   text, 
@@ -9,7 +10,8 @@ const ButtonComponent = ({
   size = 'md', 
   alignment = 'left', 
   target = '_self',
-  componentId 
+  componentId,
+  extraClasses = ''
 }) => {
   // Style classes based on the style prop
   const styleClasses = {
@@ -47,9 +49,13 @@ const ButtonComponent = ({
   // If link is external (starts with http or https), use regular anchor tag
   const isExternalLink = link.startsWith('http://') || link.startsWith('https://');
   
+  // Process extraClasses to handle arbitrary Tailwind classes
+  const { styles, remainingClasses } = extractArbitraryStyles(extraClasses);
+  const processedExtraClasses = processArbitraryClasses(extraClasses);
+
   // The button container with alignment
   return (
-    <div id={componentId} className={`button-component ${alignmentClasses[alignment] || ''} mb-6`}>
+    <div id={componentId} className={`button-component ${alignmentClasses[alignment] || ''} mb-6 ${processedExtraClasses}`} style={styles}>
       {isExternalLink ? (
         <a 
           href={link} 

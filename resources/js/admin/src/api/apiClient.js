@@ -10,13 +10,43 @@ const apiClient = axios.create({
 	                               }
                                });
 
-// Add a request interceptor to include the token
+// Add a request interceptor to include the token and handle Laravel 12 requirements
 apiClient.interceptors.request.use(
 	(config) => {
+		// Add auth token
 		const token = localStorage.getItem('token');
 		if (token) {
 			config.headers['Authorization'] = `Bearer ${token}`;
 		}
+		
+		// Handle PUT requests properly for Laravel 12
+		if (config.method === 'put') {
+			// Make sure PUT requests have the correct headers for Laravel
+			config.headers['X-HTTP-Method-Override'] = 'PUT';
+			config.headers['Content-Type'] = 'application/json';
+			config.headers['Accept'] = 'application/json';
+			
+			// Add CSRF token if available
+			const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+			if (csrfToken) {
+				config.headers['X-CSRF-TOKEN'] = csrfToken;
+			}
+			
+			// Convert FormData to JSON if needed
+			if (config.data instanceof FormData) {
+				const formDataObj = {};
+				for (let [key, value] of config.data.entries()) {
+					// Handle boolean conversions
+					if (value === '1' || value === '0') {
+						formDataObj[key] = value === '1';
+					} else {
+						formDataObj[key] = value;
+					}
+				}
+				config.data = formDataObj;
+			}
+		}
+		
 		return config;
 	},
 	(error) => {

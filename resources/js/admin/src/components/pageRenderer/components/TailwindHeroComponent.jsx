@@ -1,5 +1,6 @@
 // resources/js/admin/src/components/pageRenderer/components/TailwindHeroComponent.jsx
 import React from 'react';
+import { extractArbitraryStyles, processArbitraryClasses } from '../../../utils/tailwindUtils';
 
 const TailwindHeroComponent = ({
   title,
@@ -11,7 +12,8 @@ const TailwindHeroComponent = ({
   alignment = 'left',
   backgroundColor = 'white',
   textColor = 'gray-900',
-  componentId
+  componentId,
+  extraClasses = ''
 }) => {
   // Background color classes
   const bgColorClasses = {
@@ -61,10 +63,15 @@ const TailwindHeroComponent = ({
     return { __html: content };
   };
 
+  // Process extraClasses to handle arbitrary Tailwind classes
+  const { styles, remainingClasses } = extractArbitraryStyles(extraClasses);
+  const processedExtraClasses = processArbitraryClasses(extraClasses);
+
   return (
     <section
       id={componentId}
-      className={`py-20 ${bgColorClasses[backgroundColor] || 'bg-white'}`}
+      className={`py-20 ${bgColorClasses[backgroundColor] || 'bg-white'} ${processedExtraClasses}`}
+      style={styles}
     >
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className={`flex ${contentAlignmentClasses[alignment] || 'justify-start'}`}>

@@ -22,6 +22,12 @@ export default defineConfig({
                                 resolve: {
                                     alias: {
                                         '@': path.resolve(__dirname, './resources/js/admin/src'),
+                                        'draft-js': path.resolve(__dirname, 'node_modules/draft-js'),
+                                        'react-draft-wysiwyg': path.resolve(__dirname, 'node_modules/react-draft-wysiwyg'),
                                     },
+                                },
+                                define: {
+                                    'process.env.NODE_ENV': JSON.stringify('production'),
+                                    'global': 'window',
                                 },
                             });

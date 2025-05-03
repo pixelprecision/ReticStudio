@@ -101,13 +101,13 @@ const Dashboard = () => {
 					 <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
 						 <div className="bg-white overflow-hidden shadow rounded-lg lg:col-span-2">
 							 <div className="px-4 py-5 sm:p-6">
-								 <h2 className="text-lg font-medium text-gray-900">Welcome to LaravelCMS Builder</h2>
+								 <h2 className="text-lg font-medium text-gray-900">Welcome to Retic Laravel Studio</h2>
 								 <p className="mt-3 text-sm text-gray-500">
 									 This is the main administration area for your website. From here, you can manage
 									 pages, components, forms, media, and more.
 								 </p>
 								 <p className="mt-3 text-sm text-gray-500">
-									 The LaravelCMS Builder combines the power of Laravel's robust backend with
+									 The Retic Laravel Studio combines the power of Laravel's robust backend with
 									 React's dynamic frontend capabilities to offer an intuitive interface for
 									 building responsive, database-driven web applications.
 								 </p>

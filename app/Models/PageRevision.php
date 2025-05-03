@@ -18,6 +18,7 @@
 			'meta_title',
 			'meta_description',
 			'meta_keywords',
+			'layout',
 			'created_by',
 		];
 		

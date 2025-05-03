@@ -1,8 +1,9 @@
 // src/pages/media/MediaLibrary.jsx
 import React, {useState, useEffect} from 'react';
 import PageHeader from '../../components/common/PageHeader';
-import {FiUpload, FiFolder, FiTrash2, FiImage, FiSearch, FiEdit, FiEye, FiX} from 'react-icons/fi';
-import {getMedia, getMediaCollections, uploadMedia} from '../../api/mediaApi.js';
+import {FiUpload, FiFolder, FiTrash2, FiImage, FiSearch, FiEdit, FiEye, FiX, FiCheck, FiFile, FiMusic, FiVideo} from 'react-icons/fi';
+import {getMedia, getMediaCollections, uploadMedia, deleteMediaItem, createMediaCollection, updateMediaItem} from '../../api/mediaApi.js';
+import {showToast, handleApiError} from '../../api/apiClient';
 
 const MediaLibrary = () => {
 	const [mediaFiles, setMediaFiles] = useState([]);
@@ -14,88 +15,69 @@ const MediaLibrary = () => {
 	const [uploading, setUploading] = useState(false);
 	const [showNewCollection, setShowNewCollection] = useState(false);
 	const [newCollectionName, setNewCollectionName] = useState('');
+	const [editingName, setEditingName] = useState('');
+	const [isEditing, setIsEditing] = useState(false);
+	const [refreshTrigger, setRefreshTrigger] = useState(0);
 
 	// Filter types
 	const [filterType, setFilterType] = useState('all');
 
+	// Fetch data from API
 	useEffect(() => {
-		// Mock data - replace with API call in production
-		const mockCollections = [
-			{ id: 1, name: 'Images', slug: 'images', count: 25 },
-			{ id: 2, name: 'Documents', slug: 'documents', count: 10 },
-			{ id: 3, name: 'Videos', slug: 'videos', count: 5 },
-		];
-
-		const mockMediaFiles = [
-			{
-				id: 1,
-				name: 'Beach Photo',
-				file_name: 'beach.jpg',
-				mime_type: 'image/jpeg',
-				url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
-				size: 1240000,
-				collection: 'images',
-				created_at: '2023-06-15T14:20:30'
-			},
-			{
-				id: 2,
-				name: 'Product Brochure',
-				file_name: 'brochure.pdf',
-				mime_type: 'application/pdf',
-				url: '#',
-				size: 2500000,
-				collection: 'documents',
-				created_at: '2023-06-12T10:15:22'
-			},
-			{
-				id: 3,
-				name: 'Mountain Landscape',
-				file_name: 'mountain.jpg',
-				mime_type: 'image/jpeg',
-				url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b',
-				size: 1800000,
-				collection: 'images',
-				created_at: '2023-06-10T09:45:15'
-			},
-			{
-				id: 4,
-				name: 'Product Demo',
-				file_name: 'demo.mp4',
-				mime_type: 'video/mp4',
-				url: '#',
-				size: 15000000,
-				collection: 'videos',
-				created_at: '2023-06-05T16:30:00'
-			},
-		];
-
-		setCollections(mockCollections);
-		setMediaFiles(mockMediaFiles);
-		setLoading(false);
-
 		const fetchData = async () => {
 			setLoading(true);
 			try {
+				// Get collections
 				const collectionsResponse = await getMediaCollections();
 				const collectionsData = collectionsResponse.data;
-				console.log(collectionsData);
 
-				setCollections(collectionsData);
+				// Count media files per collection
+				const collectionsWithCount = collectionsData.map(collection => ({
+					...collection,
+					count: 0 // Will be updated after we get media
+				}));
+				setCollections(collectionsWithCount);
 
-				const mediaResponse = await getMedia();
-				const mediaData = mediaResponse.data.data;
-				console.log(mediaData);
+				// Get media files
+				const mediaParams = {};
+				if (selectedCollection !== 'all') {
+					mediaParams.collection = selectedCollection;
+				}
+
+				const mediaResponse = await getMedia(mediaParams);
+				// Check if we have data.data (paginated response) or just data
+				const mediaData = mediaResponse.data.data || mediaResponse.data;
+
+				// Update collections with counts
+				if (collectionsWithCount.length > 0) {
+					const collectionCounts = {};
+					mediaData.forEach(file => {
+						if (file.collection_name) {
+							collectionCounts[file.collection_name] = (collectionCounts[file.collection_name] || 0) + 1;
+						}
+					});
+
+					const updatedCollections = collectionsWithCount.map(collection => ({
+						...collection,
+						count: collectionCounts[collection.slug] || 0
+					}));
+
+					setCollections(updatedCollections);
+				}
+
 				setMediaFiles(mediaData);
 			}
 			catch (error) {
 				console.error('Error fetching data:', error);
+				showToast('Error', 'Failed to load media library data', 'error');
 			}
 			finally {
 				setLoading(false);
 			}
 		};
+
 		fetchData();
-	}, []);
+	}, [selectedCollection, refreshTrigger]);
 
 	const handleFileUpload = (e) => {
 		const files = Array.from(e.target.files);
@@ -104,13 +86,17 @@ const MediaLibrary = () => {
 		setUploading(true);
 
 		const uploadFiles = async () => {
-			setUploading(true);
 			try {
 				const formData = new FormData();
 
-				files.forEach(file => {
-					formData.append('files[]', file);
-				});
+				// Handle single or multiple files
+				if (files.length === 1) {
+					formData.append('file', files[0]);
+				} else {
+					files.forEach(file => {
+						formData.append('files[]', file);
+					});
+				}
 
 				if (selectedCollection !== 'all') {
 					formData.append('collection', selectedCollection);
@@ -118,81 +104,83 @@ const MediaLibrary = () => {
 
 				const response = await uploadMedia(formData);
 
-				const data = response.data;
-				setMediaFiles([...data, ...mediaFiles]);
+				// Refresh the media list
+				setRefreshTrigger(prev => prev + 1);
+				showToast('Success', 'Files uploaded successfully', 'success');
 			}
 			catch (error) {
 				console.error('Error uploading files:', error);
+				handleApiError(error);
 			}
 			finally {
 				setUploading(false);
 			}
 		};
-		console.log('Uploading files');
+
 		uploadFiles();
 	};
 
-	const handleCreateCollection = () => {
+	const handleCreateCollection = async () => {
 		if (!newCollectionName.trim()) return;
 
-		// Mock collection creation - replace with API call in production
-		const newCollection = {
-			id: Date.now(),
-			name: newCollectionName,
-			slug: newCollectionName.toLowerCase().replace(/\s+/g, '-'),
-			count: 0
-		};
+		try {
+			const response = await createMediaCollection({
+				name: newCollectionName,
+				slug: newCollectionName.toLowerCase().replace(/\s+/g, '-')
+			});
 
-		setCollections([...collections, newCollection]);
-		setNewCollectionName('');
-		setShowNewCollection(false);
-
-		// Actual API implementation would be:
-		// const createCollection = async () => {
-		//   try {
-		//     const response = await fetch('/api/media-collections', {
-		//       method: 'POST',
-		//       headers: { 'Content-Type': 'application/json' },
-		//       body: JSON.stringify({ name: newCollectionName })
-		//     });
-		//
-		//     const data = await response.json();
-		//     setCollections([...collections, data]);
-		//     setNewCollectionName('');
-		//     setShowNewCollection(false);
-		//   } catch (error) {
-		//     console.error('Error creating collection:', error);
-		//   }
-		// };
-		// createCollection();
+			const newCollection = response.data;
+			setCollections([...collections, {...newCollection, count: 0}]);
+			setNewCollectionName('');
+			setShowNewCollection(false);
+			showToast('Success', 'Collection created successfully', 'success');
+		} catch (error) {
+			console.error('Error creating collection:', error);
+			handleApiError(error);
+		}
 	};
 
-	const handleDeleteFile = (id) => {
+	const handleDeleteFile = async (id) => {
 		if (window.confirm('Are you sure you want to delete this file?')) {
-			// Mock deletion - replace with API call in production
-			setMediaFiles(mediaFiles.filter(file => file.id !== id));
-			if (selectedFile && selectedFile.id === id) {
-				setSelectedFile(null);
+			try {
+				await deleteMediaItem(id);
+				setMediaFiles(mediaFiles.filter(file => file.id !== id));
+				if (selectedFile && selectedFile.id === id) {
+					setSelectedFile(null);
+				}
+				showToast('Success', 'File deleted successfully', 'success');
+			} catch (error) {
+				console.error('Error deleting file:', error);
+				handleApiError(error);
 			}
+		}
+	};
 
-			// Actual API implementation would be:
-			// const deleteFile = async () => {
-			//   try {
-			//     await fetch(`/api/media/${id}`, { method: 'DELETE' });
-			//     setMediaFiles(mediaFiles.filter(file => file.id !== id));
-			//     if (selectedFile && selectedFile.id === id) {
-			//       setSelectedFile(null);
-			//     }
-			//   } catch (error) {
-			//     console.error('Error deleting file:', error);
-			//   }
-			// };
-			// deleteFile();
+	const handleUpdateFileName = async () => {
+		if (!editingName.trim() || !selectedFile) return;
+
+		try {
+			await updateMediaItem(selectedFile.id, { name: editingName });
+
+			// Update the file in the state
+			const updatedFiles = mediaFiles.map(file =>
+				file.id === selectedFile.id
+					? { ...file, name: editingName }
+					: file
+			);
+
+			setMediaFiles(updatedFiles);
+			setSelectedFile({ ...selectedFile, name: editingName });
+			setIsEditing(false);
+			showToast('Success', 'File updated successfully', 'success');
+		} catch (error) {
+			console.error('Error updating file:', error);
+			handleApiError(error);
 		}
 	};
 
 	const formatFileSize = (bytes) => {
-		if (bytes === 0) return '0 Bytes';
+		if (!bytes || bytes === 0) return '0 Bytes';
 		const k = 1024;
 		const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
 		const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -202,30 +190,30 @@ const MediaLibrary = () => {
 	// Filter files based on selected collection, type, and search term
 	const filteredFiles = mediaFiles.filter(file => {
 		// Collection filter
-		if (selectedCollection !== 'all' && file.collection !== selectedCollection) {
+		if (selectedCollection !== 'all' && file.collection_name !== selectedCollection) {
 			return false;
 		}
 
 		// Type filter
 		if (filterType !== 'all') {
-			if (filterType === 'image' && !file.mime_type.startsWith('image/')) {
+			if (filterType === 'image' && !file.mime_type?.startsWith('image/')) {
 				return false;
 			}
 			if (filterType === 'document' && !['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'].includes(file.mime_type)) {
 				return false;
 			}
-			if (filterType === 'video' && !file.mime_type.startsWith('video/')) {
+			if (filterType === 'video' && !file.mime_type?.startsWith('video/')) {
 				return false;
 			}
-			if (filterType === 'audio' && !file.mime_type.startsWith('audio/')) {
+			if (filterType === 'audio' && !file.mime_type?.startsWith('audio/')) {
 				return false;
 			}
 		}
 
 		// Search filter
 		if (searchTerm) {
-			return file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			       file.file_name.toLowerCase().includes(searchTerm.toLowerCase());
+			return file.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				   file.file_name?.toLowerCase().includes(searchTerm.toLowerCase());
 		}
 
 		return true;
@@ -470,20 +458,23 @@ const MediaLibrary = () => {
 											    className={`group border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow ${
 												    selectedFile && selectedFile.id === file.id ? 'ring-2 ring-blue-500' : ''
 											    }`}
-											    onClick={() => setSelectedFile(file)}
+											    onClick={() => {
+												    setSelectedFile(file);
+												    setEditingName(file.name);
+											    }}
 										    >
 											    <div className="aspect-w-1 aspect-h-1 bg-gray-200 group-hover:opacity-75">
-												    {file.mime_type.startsWith('image/') ? (
+												    {file.mime_type?.startsWith('image/') ? (
 													    <img
-														    src={file.url}
+														    src={file.url || file.thumbnail}
 														    alt={file.name}
 														    className="w-full h-full object-cover"
 													    />
-												    ) : file.mime_type.startsWith('video/') ? (
+												    ) : file.mime_type?.startsWith('video/') ? (
 													    <div className="w-full h-full flex items-center justify-center bg-gray-800">
 														    <FiVideo className="h-12 w-12 text-white"/>
 													    </div>
-												    ) : file.mime_type.startsWith('audio/') ? (
+												    ) : file.mime_type?.startsWith('audio/') ? (
 													    <div className="w-full h-full flex items-center justify-center bg-blue-50">
 														    <FiMusic className="h-12 w-12 text-blue-500"/>
 													    </div>
@@ -521,7 +512,7 @@ const MediaLibrary = () => {
 
 			{/* File details sidebar */}
 			{selectedFile && (
-				<div className="fixed inset-y-0 right-0 max-w-xs w-full bg-white shadow-xl overflow-y-auto">
+				<div className="fixed inset-y-0 right-0 max-w-xs w-full bg-white shadow-xl overflow-y-auto z-10">
 					<div className="p-4 flex justify-between items-center border-b border-gray-200">
 						<h2 className="text-lg font-medium text-gray-900">File Details</h2>
 						<button
@@ -535,17 +526,17 @@ const MediaLibrary = () => {
 
 					<div className="p-4">
 						<div className="aspect-w-1 aspect-h-1 bg-gray-200 mb-4">
-							{selectedFile.mime_type.startsWith('image/') ? (
+							{selectedFile.mime_type?.startsWith('image/') ? (
 								<img
-									src={selectedFile.url}
+									src={selectedFile.url || selectedFile.thumbnail}
 									alt={selectedFile.name}
 									className="w-full h-full object-cover"
 								/>
-							) : selectedFile.mime_type.startsWith('video/') ? (
+							) : selectedFile.mime_type?.startsWith('video/') ? (
 								<div className="w-full h-full flex items-center justify-center bg-gray-800">
 									<FiVideo className="h-16 w-16 text-white"/>
 								</div>
-							) : selectedFile.mime_type.startsWith('audio/') ? (
+							) : selectedFile.mime_type?.startsWith('audio/') ? (
 								<div className="w-full h-full flex items-center justify-center bg-blue-50">
 									<FiMusic className="h-16 w-16 text-blue-500"/>
 								</div>
@@ -559,7 +550,41 @@ const MediaLibrary = () => {
 						<dl className="space-y-4">
 							<div>
 								<dt className="text-sm font-medium text-gray-500">Name</dt>
-								<dd className="mt-1 text-sm text-gray-900">{selectedFile.name}</dd>
+								{isEditing ? (
+									<div className="flex mt-1">
+										<input
+											type="text"
+											value={editingName}
+											onChange={(e) => setEditingName(e.target.value)}
+											className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+										/>
+										<button
+											onClick={handleUpdateFileName}
+											className="ml-2 inline-flex items-center p-1 border border-transparent rounded-md text-green-600 hover:bg-green-50 focus:outline-none"
+										>
+											<FiCheck className="h-5 w-5"/>
+										</button>
+										<button
+											onClick={() => {
+												setIsEditing(false);
+												setEditingName(selectedFile.name);
+											}}
+											className="ml-1 inline-flex items-center p-1 border border-transparent rounded-md text-red-600 hover:bg-red-50 focus:outline-none"
+										>
+											<FiX className="h-5 w-5"/>
+										</button>
+									</div>
+								) : (
+									<div className="flex items-center mt-1">
+										<dd className="text-sm text-gray-900 flex-grow">{selectedFile.name}</dd>
+										<button
+											onClick={() => setIsEditing(true)}
+											className="ml-2 text-blue-600 hover:text-blue-800"
+										>
+											<FiEdit className="h-4 w-4"/>
+										</button>
+									</div>
+								)}
 							</div>
 
 							<div>
@@ -580,7 +605,7 @@ const MediaLibrary = () => {
 							<div>
 								<dt className="text-sm font-medium text-gray-500">Collection</dt>
 								<dd className="mt-1 text-sm text-gray-900">
-									{collections.find(c => c.slug === selectedFile.collection)?.name || 'None'}
+									{collections.find(c => c.slug === selectedFile.collection_name)?.name || 'Default'}
 								</dd>
 							</div>
 
@@ -599,11 +624,23 @@ const MediaLibrary = () => {
 									</a>
 								</dd>
 							</div>
+
+							{selectedFile.mime_type?.startsWith('image/') && (
+								<div>
+									<dt className="text-sm font-medium text-gray-500">Thumbnail URL</dt>
+									<dd className="mt-1 text-sm text-gray-900 break-all">
+										<a href={selectedFile.thumbnail} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500">
+											{selectedFile.thumbnail}
+										</a>
+									</dd>
+								</div>
+							)}
 						</dl>
 
 						<div className="mt-6 space-y-3">
 							<button
 								type="button"
+								onClick={() => setIsEditing(true)}
 								className="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 							>
 								<FiEdit className="mr-2 h-4 w-4"/> Edit Details

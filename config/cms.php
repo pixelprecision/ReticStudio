@@ -12,7 +12,7 @@
 		| in various other places in the application.
 		|
 		*/
-		'name' => env('CMS_NAME', 'LaravelCMS Builder'),
+		'name' => env('CMS_NAME', 'Retic Laravel Studio'),
 		
 		/*
 		|--------------------------------------------------------------------------
@@ -181,7 +181,7 @@
 			'meta_title_template' => env('CMS_SEO_META_TITLE_TEMPLATE', '{title} | {site_name}'),
 			
 			// Default meta description
-			'meta_description' => env('CMS_SEO_META_DESCRIPTION', 'LaravelCMS Builder - A powerful CMS built with Laravel'),
+			'meta_description' => env('CMS_SEO_META_DESCRIPTION', 'Retic Laravel Studio - A powerful CMS built with Laravel'),
 			
 			// Default meta keywords
 			'meta_keywords' => env('CMS_SEO_META_KEYWORDS', 'laravel, cms, builder'),
@@ -223,5 +223,30 @@
 			
 			// Cache lifetime in minutes
 			'lifetime' => env('CMS_CACHE_LIFETIME', 60),
+		],
+		
+		/*
+		|--------------------------------------------------------------------------
+		| CMS Footer
+		|--------------------------------------------------------------------------
+		|
+		| These options configure the footer in the CMS.
+		|
+		*/
+		'footer' => [
+			// Enable footer
+			'show_footer' => env('CMS_FOOTER_SHOW', true),
+			
+			// Enable footer bar
+			'show_footer_bar' => env('CMS_FOOTER_BAR_SHOW', true),
+			
+			// Footer style (standard, centered)
+			'footer_style' => env('CMS_FOOTER_STYLE', 'standard'),
+			
+			// Default number of columns
+			'footer_columns' => env('CMS_FOOTER_COLUMNS', 3),
+			
+			// Default copyright text
+			'copyright_text' => env('CMS_FOOTER_COPYRIGHT', '© {year} Your Site. All rights reserved.'),
 		],
 	];

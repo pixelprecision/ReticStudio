@@ -37,6 +37,7 @@ const DataTable = ({
 	                   onSelectChange,
 	                   viewBaseUrl,
 	                   editBaseUrl,
+                     actionRenderer,
                    }) => {
 	// Handle row selection
 	const toggleRow = (id) => {
@@ -192,103 +193,103 @@ const DataTable = ({
 											    </td>
 										    ))}
 										    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-											    <Menu as="div" className="relative inline-block text-left">
-												    <div>
-													    <Menu.Button className="inline-flex justify-center w-full rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-														    <FiMoreVertical className="h-5 w-5" aria-hidden="true" />
-													    </Menu.Button>
-												    </div>
-
-												    <Transition
-													    as={Fragment}
-													    enter="transition ease-out duration-100"
-													    enterFrom="transform opacity-0 scale-95"
-													    enterTo="transform opacity-100 scale-100"
-													    leave="transition ease-in duration-75"
-													    leaveFrom="transform opacity-100 scale-100"
-													    leaveTo="transform opacity-0 scale-95"
-												    >
-													    <Menu.Items className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-														    <div className="py-1">
-															    {viewBaseUrl && (
-																    <Menu.Item>
-																	    {({ active }) => (
-																		    <Link
-																			    to={`${viewBaseUrl}/${item.id}`}
-																			    className={`${
-																				    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-																			    } flex items-center px-4 py-2 text-sm`}
-																		    >
-																			    <FiEye className="mr-3 h-5 w-5 text-gray-400" aria-hidden="true" />
-																			    View
-																		    </Link>
-																	    )}
-																    </Menu.Item>
-															    )}
-															    {onView && !viewBaseUrl && (
-																    <Menu.Item>
-																	    {({ active }) => (
-																		    <button
-																			    onClick={() => onView(item)}
-																			    className={`${
-																				    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-																			    } flex items-center w-full text-left px-4 py-2 text-sm`}
-																		    >
-																			    <FiEye className="mr-3 h-5 w-5 text-gray-400" aria-hidden="true" />
-																			    View
-																		    </button>
-																	    )}
-																    </Menu.Item>
-															    )}
-															    {editBaseUrl && (
-																    <Menu.Item>
-																	    {({ active }) => (
-																		    <Link
-																			    to={`${editBaseUrl}/${item.id}`}
-																			    className={`${
-																				    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-																			    } flex items-center px-4 py-2 text-sm`}
-																		    >
-																			    <FiEdit className="mr-3 h-5 w-5 text-gray-400" aria-hidden="true" />
-																			    Edit
-																		    </Link>
-																	    )}
-																    </Menu.Item>
-															    )}
-															    {onEdit && !editBaseUrl && (
-																    <Menu.Item>
-																	    {({ active }) => (
-																		    <button
-																			    onClick={() => onEdit(item)}
-																			    className={`${
-																				    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-																			    } flex items-center w-full text-left px-4 py-2 text-sm`}
-																		    >
-																			    <FiEdit className="mr-3 h-5 w-5 text-gray-400" aria-hidden="true" />
-																			    Edit
-																		    </button>
-																	    )}
-																    </Menu.Item>
-															    )}
-															    {onDelete && (
-																    <Menu.Item>
-																	    {({ active }) => (
-																		    <button
-																			    onClick={() => onDelete(item)}
-																			    className={`${
-																				    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-																			    } flex items-center w-full text-left px-4 py-2 text-sm text-red-600`}
-																		    >
-																			    <FiTrash2 className="mr-3 h-5 w-5 text-red-500" aria-hidden="true" />
-																			    Delete
-																		    </button>
-																	    )}
-																    </Menu.Item>
-															    )}
-														    </div>
-													    </Menu.Items>
-												    </Transition>
-											    </Menu>
+                          {actionRenderer ? (
+                            actionRenderer(item)
+                          ) : (
+											      <div className="relative inline-block text-left">
+												      {/* Using a regular dropdown instead of @headlessui/react Menu for positioning control */}
+												      <div className="dropdown">
+													      <button 
+                                  className="dropdown-toggle px-2 py-1 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                  onClick={(e) => {
+														          const dropdown = e.currentTarget.parentNode;
+														          dropdown.classList.toggle('active');
+														          e.stopPropagation();
+													          }}
+													      >
+														      <FiMoreVertical className="h-5 w-5" aria-hidden="true" />
+													      </button>
+													      <div className="dropdown-menu hidden absolute left-0 top-full mt-1 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+														      <div className="py-1">
+															      {viewBaseUrl && (
+																      <Link
+																	      to={`${viewBaseUrl}/${item.id}`}
+																	      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+																	      onClick={() => {
+																		      document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+																	      }}
+																      >
+																	      <FiEye className="mr-3 h-5 w-5 text-gray-400" aria-hidden="true" />
+																	      View
+																      </Link>
+															      )}
+															      {onView && !viewBaseUrl && (
+																      <button
+																	      onClick={() => {
+																		      document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+																		      onView(item);
+																	      }}
+																	      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+																      >
+																	      <FiEye className="mr-3 h-5 w-5 text-gray-400" aria-hidden="true" />
+																	      View
+																      </button>
+															      )}
+															      {editBaseUrl && (
+																      <Link
+																	      to={`${editBaseUrl}/${item.id}`}
+																	      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+																	      onClick={() => {
+																		      document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+																	      }}
+																      >
+																	      <FiEdit className="mr-3 h-5 w-5 text-gray-400" aria-hidden="true" />
+																	      Edit
+																      </Link>
+															      )}
+															      {editBaseUrl && editBaseUrl === '/admin/pages/edit' && (
+																      <Link
+																	      to={`/admin/pages/edit-live/${item.id}`}
+																	      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+																	      onClick={() => {
+																		      document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+																	      }}
+																      >
+																	      <svg className="mr-3 h-5 w-5 text-gray-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+																		      <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+																	      </svg>
+																	      Live Edit
+																      </Link>
+															      )}
+															      {onEdit && !editBaseUrl && (
+																      <button
+																	      onClick={() => {
+																		      document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+																		      onEdit(item);
+																	      }}
+																	      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+																      >
+																	      <FiEdit className="mr-3 h-5 w-5 text-gray-400" aria-hidden="true" />
+																	      Edit
+																      </button>
+															      )}
+															      {onDelete && (
+																      <button
+																	      onClick={() => {
+																		      document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+																		      onDelete(item);
+																	      }}
+																	      className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 hover:text-red-700"
+																      >
+																	      <FiTrash2 className="mr-3 h-5 w-5 text-red-500" aria-hidden="true" />
+																	      Delete
+																      </button>
+															      )}
+														      </div>
+													      </div>
+												      </div>
+											      </div>
+                          )}
 										    </td>
 									    </tr>
 								    ))
@@ -298,6 +299,25 @@ const DataTable = ({
 					</div>
 				</div>
 			</div>
+
+			{/* Close any open dropdowns when clicking outside */}
+			<div className="hidden" dangerouslySetInnerHTML={{ __html: `
+        <script>
+          document.addEventListener('click', function(e) {
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+              if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+              }
+            });
+          });
+        </script>
+        <style>
+          .dropdown.active .dropdown-menu {
+            display: block;
+          }
+        </style>
+      `}} />
 		</div>
 	);
 };

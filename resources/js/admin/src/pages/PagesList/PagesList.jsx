@@ -1,11 +1,11 @@
-// resources/js/admin/src/pages/pages/PagesList.jsx
+// resources/js/admin/src/pages/PagesList/PagesList.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPages, deletePage } from '../../api/pagesApi';
 import { showToast } from '../../api/apiClient';
 import PageHeader from '../../components/common/PageHeader';
 import DataTable from '../../components/common/DataTable';
-import { FiEdit, FiTrash2, FiEye } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiEye, FiZap } from 'react-icons/fi';
 
 const PagesList = () => {
 	const [pages, setPages] = useState([]);
@@ -52,9 +52,12 @@ const PagesList = () => {
 	const handleEdit = (page) => {
 		navigate(`/admin/pages/edit/${page.id}`);
 	};
+	
+	const handleLiveEdit = (page) => {
+		navigate(`/admin/pages/edit-live/${page.id}`);
+	};
 
 	const handleView = (page) => {
-		// In a real application, you would navigate to the frontend page
 		window.open(`/${page.slug}`, '_blank');
 	};
 
@@ -73,9 +76,43 @@ const PagesList = () => {
 		}
 	};
 
+	// Custom action renderer for the DataTable
+	const actionRenderer = (page) => (
+		<div className="flex items-center space-x-2">
+			<button
+				onClick={() => handleView(page)}
+				className="text-gray-600 hover:text-blue-600"
+				title="View Page"
+			>
+				<FiEye size={18} />
+			</button>
+			<button
+				onClick={() => handleEdit(page)}
+				className="text-gray-600 hover:text-green-600"
+				title="Edit Page"
+			>
+				<FiEdit size={18} />
+			</button>
+			<button
+				onClick={() => handleLiveEdit(page)}
+				className="text-gray-600 hover:text-purple-600"
+				title="Live Edit Page"
+			>
+				<FiZap size={18} />
+			</button>
+			<button
+				onClick={() => handleDelete(page)}
+				className="text-gray-600 hover:text-red-600"
+				title="Delete Page"
+			>
+				<FiTrash2 size={18} />
+			</button>
+		</div>
+	);
+
 	const filteredPages = pages.filter(page =>
-		                                   page.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		                                   page.slug.toLowerCase().includes(searchTerm.toLowerCase())
+		page.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+		page.slug.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
 	return (
@@ -85,6 +122,14 @@ const PagesList = () => {
 				description="Manage your website pages"
 				createButtonLabel="Create Page"
 				createButtonLink="/admin/pages/create"
+				extraButtons={[
+					{
+						label: "Create with Live Editor",
+						icon: <FiZap className="mr-2" />,
+						link: "/admin/pages/create-live",
+						className: "ml-2 bg-purple-600 hover:bg-purple-700"
+					}
+				]}
 			/>
 
 			<div className="card">
@@ -112,9 +157,7 @@ const PagesList = () => {
 					data={filteredPages}
 					columns={columns}
 					loading={loading}
-					onEdit={handleEdit}
-					onView={handleView}
-					onDelete={handleDelete}
+					actionRenderer={actionRenderer}
 					editBaseUrl="/admin/pages/edit"
 				/>
 			</div>
@@ -123,7 +166,3 @@ const PagesList = () => {
 };
 
 export default PagesList;
-
-
-
-

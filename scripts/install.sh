@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# LaravelCMS Builder Installation Script
-echo "Welcome to LaravelCMS Builder Installation!"
+# Retic Laravel Studio Installation Script
+echo "Welcome to Retic Laravel Studio Installation!"
 echo "----------------------------------------"
-echo "This script will install and set up LaravelCMS Builder on your system."
+echo "This script will install and set up Retic Laravel Studio on your system."
 echo ""
 
 # Check for required software
@@ -113,8 +113,8 @@ echo "Setting file permissions..."
 chmod -R 775 storage bootstrap/cache
 
 echo ""
-echo "LaravelCMS Builder has been successfully installed!"
+echo "Retic Laravel Studio has been successfully installed!"
 echo "You can start the development server with:"
 echo "cd $PROJECT_DIR && php artisan serve"
 echo ""
-echo "Thank you for choosing LaravelCMS Builder!"
+echo "Thank you for choosing Retic Laravel Studio!"

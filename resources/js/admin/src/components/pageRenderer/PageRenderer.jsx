@@ -7,11 +7,13 @@ import ComponentRenderer from './ComponentRenderer';
  */
 const PageRenderer = ({ content }) => {
   // If content is a string (JSON), parse it
-  const contentArray = typeof content === 'string' 
-    ? JSON.parse(content) 
-    : Array.isArray(content) 
-      ? content 
+  const contentArray = typeof content === 'string'
+    ? JSON.parse(content)
+    : Array.isArray(content)
+      ? content
       : [];
+
+  console.log("PAGE RENDERER", content);
 
   // If no content or empty array, show placeholder
   if (!contentArray || contentArray.length === 0) {

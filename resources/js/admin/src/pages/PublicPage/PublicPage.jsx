@@ -11,7 +11,7 @@ import ThemeTemplateRenderer from '../../components/theme/ThemeTemplateRenderer'
 import { ThemeProvider } from '../../store/ThemeContext';
 import ReactThemeRenderer from "../../components/theme/ReactThemeRenderer.jsx";
 
-const PublicPage = ({ isPreview = false }) => {
+const PublicPage = ({ isPreview = false, isHomePage = false }) => {
   const { slug } = useParams();
   const navigate = useNavigate();
 
@@ -19,14 +19,17 @@ const PublicPage = ({ isPreview = false }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  console.log("IN PUBLIC PAGE COMPONENT");
   useEffect(() => {
+      console.log("IN PUBLIC PAGE EFFECT");
     const fetchPageData = async () => {
       setLoading(true);
       try {
         let pageResponse;
+          console.log("IS HOME PAGE", window.isHomePage);
 
         // Check if we're on the homepage (using the flag set in the preview.blade.php)
-        if (window.isHomePage) {
+        if (isHomePage || window.isHomePage) {
           pageResponse = await getHomePage();
         } else if (isPreview) {
           pageResponse = await getPreviewPage(slug);
@@ -63,10 +66,10 @@ const PublicPage = ({ isPreview = false }) => {
     };
 
     // For homepage, we don't need a slug
-    if (slug || window.isHomePage) {
+    if (slug || window.isHomePage || isHomePage) {
       fetchPageData();
     }
-  }, [slug, isPreview]);
+  }, [slug, isPreview, isHomePage]);
 
   if (loading) {
     return (
@@ -121,20 +124,15 @@ const PublicPage = ({ isPreview = false }) => {
               </div>
           )}
 
-          {/* Choose template based on page type */}
-          {page.type === 'home' ? (
-              <ReactThemeRenderer pageType={page.type}>
-                  <PageRenderer content={page.content} />
-              </ReactThemeRenderer>
-          ) : page.type === 'post' ? (
-              <ReactThemeRenderer pageType={page.type}>
-                  <PageRenderer content={page.content} />
-              </ReactThemeRenderer>
-          ) : (
-              <ReactThemeRenderer pageType={page.type}>
-                  <PageRenderer content={page.content} />
-              </ReactThemeRenderer>
-              )}
+          {/* Pass page to ReactThemeRenderer to respect page's layout preference */}
+          <ReactThemeRenderer 
+            pageType={page.type}
+            page={page}
+            pageTitle={page.title}
+            pageDescription={page.description}
+          >
+            <PageRenderer content={page.content} />
+          </ReactThemeRenderer>
         </div>
       </ThemeProvider>
   );

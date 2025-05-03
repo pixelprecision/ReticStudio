@@ -1,5 +1,6 @@
 // resources/js/admin/src/components/pageRenderer/components/TeamComponent.jsx
 import React from 'react';
+import { extractArbitraryStyles, processArbitraryClasses } from '../../../utils/tailwindUtils';
 
 const TeamComponent = ({
   title,
@@ -7,7 +8,8 @@ const TeamComponent = ({
   backgroundColor = 'white',
   teamMembers = [],
   columns = 3,
-  componentId
+  componentId,
+  extraClasses = ''
 }) => {
   // Background color classes
   const bgColorClasses = {
@@ -25,10 +27,15 @@ const TeamComponent = ({
     4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
   };
 
+  // Process extraClasses to handle arbitrary Tailwind classes
+  const { styles, remainingClasses } = extractArbitraryStyles(extraClasses);
+  const processedExtraClasses = processArbitraryClasses(extraClasses);
+
   return (
     <section
       id={componentId}
-      className={`py-20 ${bgColorClasses[backgroundColor] || 'bg-white'}`}
+      className={`py-20 ${bgColorClasses[backgroundColor] || 'bg-white'} ${processedExtraClasses}`}
+      style={styles}
     >
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="text-center mb-16">

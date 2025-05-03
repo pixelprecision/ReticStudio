@@ -9,6 +9,9 @@ Route::get('/', function () {
 	return view('preview', ['isHomePage' => true]);
 });
 
+// Test Media Upload Route
+Route::post('/test-media-upload', [\App\Http\Controllers\Api\TestMediaController::class, 'test']);
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes

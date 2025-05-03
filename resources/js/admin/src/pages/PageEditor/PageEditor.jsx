@@ -2,9 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import {useParams, useNavigate, Link} from 'react-router-dom';
 import { getPage, createPage, updatePage, getPageRevisions, restorePageRevision } from '../../api/pagesApi';
+import { getActiveTheme } from '../../api/themesApi';
 import { showToast } from '../../api/apiClient';
 import PageHeader from '../../components/common/PageHeader';
 import PageBuilder from '../../components/pageBuilder/PageBuilder';
+import { getLayoutOptions } from '../../components/theme/LayoutSelector';
 
 const PageEditor = () => {
 	const { id } = useParams();
@@ -25,8 +27,11 @@ const PageEditor = () => {
 		                                         meta_title: '',
 		                                         meta_description: '',
 		                                         meta_keywords: '',
+		                                         layout: '',
 		                                         is_published: false,
 	                                         });
+	
+	const [layoutOptions, setLayoutOptions] = useState([]);
 
 	// Fetch page data if editing
 	useEffect(() => {
@@ -34,7 +39,30 @@ const PageEditor = () => {
 			fetchPage();
 			fetchRevisions();
 		}
+		
+		// Load layout options
+		fetchLayoutOptions();
 	}, [id]);
+	
+	// Fetch theme layout options
+	const fetchLayoutOptions = async () => {
+		try {
+			// First get the available layout options
+			const options = getLayoutOptions();
+			setLayoutOptions(options);
+			
+			// Also try to get the active theme to see its default layout
+			const response = await getActiveTheme();
+			const theme = response.data;
+			
+			// If no layout is set yet, use the theme's default
+			if (!formData.layout && theme.default_layout) {
+				setFormData(prev => ({ ...prev, layout: theme.default_layout }));
+			}
+		} catch (error) {
+			console.error('Error fetching layout options:', error);
+		}
+	};
 
 	// Generate slug from title
 	useEffect(() => {
@@ -88,6 +116,7 @@ const PageEditor = () => {
 				meta_title: pageData.meta_title || '',
 				meta_description: pageData.meta_description || '',
 				meta_keywords: pageData.meta_keywords || '',
+				layout: pageData.layout || '',
 				is_published: pageData.is_published || false,
 			});
 		} catch (error) {
@@ -269,6 +298,27 @@ const PageEditor = () => {
 								{formErrors.description && <p className="mt-1 text-sm text-red-600">{formErrors.description}</p>}
 							</div>
 
+							<div className="mb-4">
+								<label htmlFor="layout" className="block text-sm font-medium text-gray-700">Page Layout</label>
+								<select
+									id="layout"
+									name="layout"
+									value={formData.layout}
+									onChange={handleChange}
+									className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+								>
+									<option value="">Use Theme Default</option>
+									{layoutOptions.map(option => (
+										<option key={option.id} value={option.value}>
+											{option.name}
+										</option>
+									))}
+								</select>
+								<p className="mt-1 text-xs text-gray-500">
+									Select a specific layout for this page or leave empty to use the theme's default layout.
+								</p>
+							</div>
+
 							<div className="flex items-center mb-4">
 								<input
 									id="is_published"
@@ -376,6 +426,17 @@ const PageEditor = () => {
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
 									</svg>
 									Preview
+								</Link>
+							)}
+							{isEditing && (
+								<Link
+									to={`/admin/pages/edit-live/${id}`}
+									className="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+								>
+									<svg className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+										<path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+									</svg>
+									Switch to Live Editor
 								</Link>
 							)}
 							<button

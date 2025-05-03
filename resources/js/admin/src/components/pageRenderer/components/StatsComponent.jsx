@@ -1,12 +1,14 @@
 // resources/js/admin/src/components/pageRenderer/components/StatsComponent.jsx
 import React from 'react';
+import { extractArbitraryStyles, processArbitraryClasses } from '../../../utils/tailwindUtils';
 
 const StatsComponent = ({
   backgroundColor = 'blue-600',
   textColor = 'white',
   stats = [],
   columns = 4,
-  componentId
+  componentId,
+  extraClasses = ''
 }) => {
   // Background color classes
   const bgColorClasses = {
@@ -35,10 +37,15 @@ const StatsComponent = ({
     5: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5',
   };
 
+  // Process extraClasses to handle arbitrary Tailwind classes
+  const { styles, remainingClasses } = extractArbitraryStyles(extraClasses);
+  const processedExtraClasses = processArbitraryClasses(extraClasses);
+
   return (
     <section
       id={componentId}
-      className={`py-16 ${bgColorClasses[backgroundColor] || 'bg-blue-600'}`}
+      className={`py-16 ${bgColorClasses[backgroundColor] || 'bg-blue-600'} ${processedExtraClasses}`}
+      style={styles}
     >
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className={`grid ${columnClasses[columns] || 'grid-cols-2 md:grid-cols-4'} gap-8 text-center`}>

@@ -13,6 +13,7 @@ import PortfolioComponent from './components/PortfolioComponent';
 import ProcessStepComponent from './components/ProcessStepComponent';
 import StatsComponent from './components/StatsComponent';
 import TestimonialsComponent from './components/TestimonialsComponent';
+import DynamicComponent from './DynamicComponent';
 
 /**
  * Component that renders different components based on their type
@@ -39,6 +40,16 @@ const ComponentRenderer = ({ component }) => {
     testimonials: TestimonialsComponent,
     // Add more component types here as needed
   };
+
+  // Handle dynamic AI-generated components
+  if (component.type === 'dynamic-ai') {
+    return (
+      <DynamicComponent 
+        content={component.props.content} 
+        settings={component.props.settings || {}} 
+      />
+    );
+  }
 
   // Get the component from the map
   const Component = componentMap[component.type];

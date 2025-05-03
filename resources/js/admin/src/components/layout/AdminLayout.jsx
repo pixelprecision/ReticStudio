@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Header from './Header'
+import CacheStatus from './CacheStatus'
 
 const AdminLayout = () => {
 	const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -26,7 +27,7 @@ const AdminLayout = () => {
 						</button>
 					</div>
 					<div className="flex-shrink-0 flex items-center px-4">
-						<h1 className="text-xl font-bold">LaravelCMS Builder</h1>
+						<h1 className="text-xl font-bold">Retic Laravel Studio</h1>
 					</div>
 					<div className="mt-5 flex-1 h-0 overflow-y-auto">
 						<Sidebar mobile={true} />
@@ -42,7 +43,7 @@ const AdminLayout = () => {
 				<div className="flex flex-col w-64">
 					<div className="flex flex-col h-0 flex-1">
 						<div className="flex items-center h-16 flex-shrink-0 px-4 bg-white border-b border-gray-200">
-							<h1 className="text-xl font-bold">LaravelCMS Builder</h1>
+							<h1 className="text-xl font-bold">Retic Laravel Studio</h1>
 						</div>
 						<div className="flex-1 flex flex-col overflow-y-auto bg-white border-r border-gray-200">
 							<Sidebar />
@@ -66,6 +67,9 @@ const AdminLayout = () => {
 					</div>
 				</footer>
 			</div>
+			
+			{/* Cache Status */}
+			<CacheStatus />
 		</div>
 	)
 }

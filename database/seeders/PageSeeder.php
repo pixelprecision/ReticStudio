@@ -17,14 +17,14 @@
 			$homePage = Page::create([
 				'title' => 'Home',
 				'slug' => 'home',
-				'description' => 'Welcome to LaravelCMS Builder',
+				'description' => 'Welcome to Retic Laravel Studio',
 				'content' => [
 					[
 						'id' => 'heading-1',
 						'type' => 'heading',
 						'props' => [
 							'level' => 'h1',
-							'text' => 'Welcome to LaravelCMS Builder',
+							'text' => 'Welcome to Retic Laravel Studio',
 							'alignment' => 'center',
 						],
 					],
@@ -32,7 +32,7 @@
 						'id' => 'text-1',
 						'type' => 'text',
 						'props' => [
-							'content' => '<p>LaravelCMS Builder is a comprehensive web application development platform that empowers users to create, customize, and deploy feature-rich websites with minimal technical knowledge.</p>',
+							'content' => '<p>Retic Laravel Studio is a comprehensive web application development platform that empowers users to create, customize, and deploy feature-rich websites with minimal technical knowledge.</p>',
 						],
 					],
 					[
@@ -48,8 +48,8 @@
 						],
 					],
 				],
-				'meta_title' => 'Home | LaravelCMS Builder',
-				'meta_description' => 'Welcome to LaravelCMS Builder - A powerful CMS built with Laravel',
+				'meta_title' => 'Home | Retic Laravel Studio',
+				'meta_description' => 'Welcome to Retic Laravel Studio - A powerful CMS built with Laravel',
 				'meta_keywords' => 'laravel, cms, builder, home',
 				'is_published' => true,
 				'published_at' => now(),
@@ -64,14 +64,14 @@
 			$aboutPage = Page::create([
 				'title' => 'About',
 				'slug' => 'about',
-				'description' => 'About LaravelCMS Builder',
+				'description' => 'About Retic Laravel Studio',
 				'content' => [
 					[
 						'id' => 'heading-1',
 						'type' => 'heading',
 						'props' => [
 							'level' => 'h1',
-							'text' => 'About LaravelCMS Builder',
+							'text' => 'About Retic Laravel Studio',
 							'alignment' => 'left',
 						],
 					],
@@ -79,12 +79,12 @@
 						'id' => 'text-1',
 						'type' => 'text',
 						'props' => [
-							'content' => '<p>LaravelCMS Builder is a comprehensive web application development platform that empowers users to create, customize, and deploy feature-rich websites with minimal technical knowledge. By combining the power of Laravel\'s robust backend with React\'s dynamic frontend capabilities, this solution offers an intuitive drag-and-drop interface for building responsive, database-driven web applications.</p><p>Our platform is designed to bridge the gap between code-heavy development and no-code solutions, offering the flexibility and power of custom development with the accessibility of visual builders.</p>',
+							'content' => '<p>Retic Laravel Studio is a comprehensive web application development platform that empowers users to create, customize, and deploy feature-rich websites with minimal technical knowledge. By combining the power of Laravel\'s robust backend with React\'s dynamic frontend capabilities, this solution offers an intuitive drag-and-drop interface for building responsive, database-driven web applications.</p><p>Our platform is designed to bridge the gap between code-heavy development and no-code solutions, offering the flexibility and power of custom development with the accessibility of visual builders.</p>',
 						],
 					],
 				],
-				'meta_title' => 'About | LaravelCMS Builder',
-				'meta_description' => 'Learn about LaravelCMS Builder - A powerful CMS built with Laravel',
+				'meta_title' => 'About | Retic Laravel Studio',
+				'meta_description' => 'Learn about Retic Laravel Studio - A powerful CMS built with Laravel',
 				'meta_keywords' => 'laravel, cms, builder, about',
 				'is_published' => true,
 				'published_at' => now(),
@@ -99,7 +99,7 @@
 			$contactPage = Page::create([
 				'title' => 'Contact',
 				'slug' => 'contact',
-				'description' => 'Contact LaravelCMS Builder',
+				'description' => 'Contact Retic Laravel Studio',
 				'content' => [
 					[
 						'id' => 'heading-1',
@@ -128,8 +128,8 @@
 						],
 					],
 				],
-				'meta_title' => 'Contact | LaravelCMS Builder',
-				'meta_description' => 'Contact the LaravelCMS Builder team',
+				'meta_title' => 'Contact | Retic Laravel Studio',
+				'meta_description' => 'Contact the Retic Laravel Studio team',
 				'meta_keywords' => 'laravel, cms, builder, contact',
 				'is_published' => true,
 				'published_at' => now(),

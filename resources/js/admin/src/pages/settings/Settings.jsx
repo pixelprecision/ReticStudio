@@ -3,6 +3,32 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/common/PageHeader';
 import { FiSave } from 'react-icons/fi';
+import { getSettings, updateBatchSettings } from '../../api/settingsApi';
+import { showToast } from '../../api/apiClient';
+
+// List of popular Google Fonts
+const GOOGLE_FONTS = [
+  { name: 'Roboto', category: 'sans-serif' },
+  { name: 'Open Sans', category: 'sans-serif' },
+  { name: 'Lato', category: 'sans-serif' },
+  { name: 'Montserrat', category: 'sans-serif' },
+  { name: 'Roboto Condensed', category: 'sans-serif' },
+  { name: 'Source Sans Pro', category: 'sans-serif' },
+  { name: 'Oswald', category: 'sans-serif' },
+  { name: 'Raleway', category: 'sans-serif' },
+  { name: 'Nunito', category: 'sans-serif' },
+  { name: 'Nunito Sans', category: 'sans-serif' },
+  { name: 'Ubuntu', category: 'sans-serif' },
+  { name: 'Merriweather', category: 'serif' },
+  { name: 'PT Serif', category: 'serif' },
+  { name: 'Playfair Display', category: 'serif' },
+  { name: 'Lora', category: 'serif' },
+  { name: 'Poppins', category: 'sans-serif' },
+  { name: 'Inter', category: 'sans-serif' },
+  { name: 'Rubik', category: 'sans-serif' },
+  { name: 'Work Sans', category: 'sans-serif' },
+  { name: 'Quicksand', category: 'sans-serif' },
+];
 
 const Settings = () => {
 	const { group = 'general' } = useParams();
@@ -12,10 +38,38 @@ const Settings = () => {
 	const [saving, setSaving] = useState(false);
 
 	useEffect(() => {
-		// Mock data - replace with API call in production
-		const mockSettings = {
+		// Fetch settings from the API using the settingsApi method
+		const fetchSettings = async () => {
+			setLoading(true);
+			try {
+				const response = await getSettings(group);
+				const data = response.data;
+				
+				// If we get no settings (especially for footer), use defaults
+				if (!data[group] || Object.keys(data[group]).length === 0) {
+					// Set default values based on group
+					if (group === 'footer') {
+						data.footer = {
+							show_footer: true,
+							show_footer_bar: true,
+							footer_style: 'standard',
+							footer_background_color: '#1f2937',
+							footer_text_color: '#ffffff',
+							copyright_text: `© ${new Date().getFullYear()} Your Site. All rights reserved.`,
+							footer_columns: 3,
+							custom_footer_classes: '',
+							custom_footer_bar_classes: ''
+						};
+					}
+				}
+				
+				setSettings(data);
+			} catch (error) {
+				console.error('Error fetching settings:', error);
+				// Fall back to mock data
+				const mockSettings = {
 			general: {
-				site_name: 'LaravelCMS Builder',
+				site_name: 'Retic Laravel Studio',
 				site_description: 'A powerful CMS built with Laravel',
 				contact_email: 'admin@example.com',
 				site_logo: '',
@@ -23,7 +77,7 @@ const Settings = () => {
 			},
 			seo: {
 				meta_title_template: '{title} | {site_name}',
-				meta_description: 'LaravelCMS Builder - A powerful CMS built with Laravel',
+				meta_description: 'Retic Laravel Studio - A powerful CMS built with Laravel',
 				meta_keywords: 'laravel, cms, builder',
 				google_analytics_id: '',
 			},
@@ -34,7 +88,7 @@ const Settings = () => {
 				linkedin_url: '',
 			},
 			email: {
-				from_name: 'LaravelCMS Builder',
+				from_name: 'Retic Laravel Studio',
 				from_email: 'noreply@example.com',
 				smtp_host: 'smtp.mailtrap.io',
 				smtp_port: '2525',
@@ -46,68 +100,116 @@ const Settings = () => {
 				primary_color: '#3490dc',
 				secondary_color: '#6c757d',
 				font_family: 'Nunito, sans-serif',
+				google_font: 'Nunito',
 				enable_dark_mode: false,
+			},
+			footer: {
+				show_footer: true,
+				show_footer_bar: true,
+				footer_style: 'standard',
+				footer_background_color: '#1f2937',
+				footer_text_color: '#ffffff',
+				copyright_text: '© {year} Your Site. All rights reserved.',
+				footer_columns: 3,
+				custom_footer_classes: '',
+				custom_footer_bar_classes: ''
 			}
 		};
 
-		setSettings(mockSettings);
-		setLoading(false);
-
-		// Actual API implementation would be:
-		// const fetchSettings = async () => {
-		//   setLoading(true);
-		//   try {
-		//     const response = await fetch(`/api/settings?group=${group}`);
-		//     const data = await response.json();
-		//     setSettings(data);
-		//   } catch (error) {
-		//     console.error('Error fetching settings:', error);
-		//   } finally {
-		//     setLoading(false);
-		//   }
-		// };
-		// fetchSettings();
+					setSettings(mockSettings);
+				} finally {
+					setLoading(false);
+				}
+			};
+			
+			fetchSettings();
 	}, [group]);
 
 	const handleChange = (key, value) => {
 		setSettings({
-			            ...settings,
-			            [group]: {
-				            ...settings[group],
-				            [key]: value
-			            }
-		            });
+			...settings,
+			[group]: {
+				...settings[group],
+				[key]: value
+			}
+		});
+		
+		// If changing google_font, also update font_family for backward compatibility
+		if (key === 'google_font') {
+			const font = GOOGLE_FONTS.find(f => f.name === value) || GOOGLE_FONTS[0];
+			const fontFamily = `${value}, ${font.category}`;
+			
+			setSettings(prevSettings => ({
+				...prevSettings,
+				[group]: {
+					...prevSettings[group],
+					google_font: value,
+					font_family: fontFamily
+				}
+			}));
+		}
 	};
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setSaving(true);
 
-		// Mock saving - replace with API call in production
-		setTimeout(() => {
+		// Save settings to the API using the settingsApi method
+		try {
+			// For footer settings, ensure boolean values are properly formatted
+			if (group === 'footer') {
+				const footerSettings = {...settings[group]};
+				if ('show_footer' in footerSettings) {
+					footerSettings.show_footer = Boolean(footerSettings.show_footer);
+				}
+				if ('show_footer_bar' in footerSettings) {
+					footerSettings.show_footer_bar = Boolean(footerSettings.show_footer_bar);
+				}
+				if ('show_social_icons' in footerSettings) {
+					footerSettings.show_social_icons = Boolean(footerSettings.show_social_icons);
+				}
+				
+				await updateBatchSettings(footerSettings);
+			} else {
+				// For other settings
+				await updateBatchSettings(settings[group]);
+			}
+			
+			// Success notification
+			showToast('Success', 'Settings saved successfully', 'success');
+		} catch (error) {
+			console.error('Error saving settings:', error);
+			// Error notification
+			showToast('Error', 'Error saving settings. Please try again.', 'error');
+		} finally {
 			setSaving(false);
-			// Maybe show a success notification
-		}, 800);
-
-		// Actual API implementation would be:
-		// const saveSettings = async () => {
-		//   setSaving(true);
-		//   try {
-		//     await fetch('/api/settings/batch', {
-		//       method: 'POST',
-		//       headers: { 'Content-Type': 'application/json' },
-		//       body: JSON.stringify(settings[group])
-		//     });
-		//     // Show success notification
-		//   } catch (error) {
-		//     console.error('Error saving settings:', error);
-		//     // Show error notification
-		//   } finally {
-		//     setSaving(false);
-		//   }
-		// };
-		// saveSettings();
+		}
 	};
+
+	// Load the selected Google Font
+	useEffect(() => {
+		// Only run this when settings are loaded and we're on the appearance tab
+		if (settings.appearance && group === 'appearance' && settings.appearance.google_font) {
+			const fontName = settings.appearance.google_font;
+			const fontLink = document.createElement('link');
+			
+			// Format font name for URL (replace spaces with +)
+			const formattedFontName = fontName.replace(/ /g, '+');
+			
+			fontLink.href = `https://fonts.googleapis.com/css?family=${formattedFontName}:400,700&display=swap`;
+			fontLink.rel = 'stylesheet';
+			document.head.appendChild(fontLink);
+			
+			// Clean up when component unmounts or font changes
+			return () => {
+				try {
+					document.head.removeChild(fontLink);
+				} catch (error) {
+					console.warn('Font link already removed');
+				}
+			};
+		}
+	}, [settings.appearance?.google_font, group]);
 
 	// Create input field based on setting type
 	const renderField = (key, value) => {
@@ -117,6 +219,7 @@ const Settings = () => {
 		if (key.includes('email')) type = 'email';
 		if (key.includes('url')) type = 'url';
 		if (key.includes('color')) type = 'color';
+		if (key === 'google_font') type = 'font';
 		if (typeof value === 'boolean') type = 'checkbox';
 
 		switch (type) {
@@ -164,6 +267,38 @@ const Settings = () => {
 						</div>
 					</div>
 				);
+			case 'font':
+				return (
+					<div>
+						<label htmlFor={key} className="block text-sm font-medium text-gray-700">
+							{formatLabel(key)}
+						</label>
+						<div className="mt-1">
+							<select
+								id={key}
+								name={key}
+								value={value}
+								onChange={(e) => handleChange(key, e.target.value)}
+								className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+							>
+								{GOOGLE_FONTS.map((font) => (
+									<option 
+										key={font.name} 
+										value={font.name}
+										style={{ fontFamily: `${font.name}, ${font.category}` }}
+									>
+										{font.name}
+									</option>
+								))}
+							</select>
+							<p className="mt-2 text-sm text-gray-500">
+								Preview: <span style={{ fontFamily: `${value}, sans-serif` }}>
+									The quick brown fox jumps over the lazy dog.
+								</span>
+							</p>
+						</div>
+					</div>
+				);
 			default:
 				return (
 					<div>
@@ -200,6 +335,7 @@ const Settings = () => {
 		{ id: 'social', name: 'Social Media' },
 		{ id: 'email', name: 'Email' },
 		{ id: 'appearance', name: 'Appearance' },
+		{ id: 'footer', name: 'Footer' },
 	];
 
 	if (loading) {

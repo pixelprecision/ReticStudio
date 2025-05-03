@@ -1,9 +1,17 @@
-
-
 // src/pages/components/ComponentEditor.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/common/PageHeader';
+import { getComponent, createComponent, updateComponent } from '../../api/componentsApi';
+
+// Import the Ace editor components
+import AceEditor from 'react-ace';
+
+// Import Ace editor modes and themes
+import 'ace-builds/src-noconflict/mode-json';
+import 'ace-builds/src-noconflict/mode-jsx';
+import 'ace-builds/src-noconflict/theme-github';
+import 'ace-builds/src-noconflict/ext-language_tools';
 
 const ComponentEditor = () => {
 	const { id } = useParams();
@@ -27,46 +35,32 @@ const ComponentEditor = () => {
 
 	useEffect(() => {
 		if (isEditing) {
-			// Mock data fetch - replace with API call in production
-			const mockComponent = {
-				id: parseInt(id),
-				name: 'Hero Banner',
-				slug: 'hero-banner',
-				description: 'A hero banner component with customizable background and text.',
-				category: 'content',
-				icon: 'banner',
-				schema: JSON.stringify({
-					                       properties: {
-						                       title: { type: 'text', label: 'Title', default: 'Welcome' },
-						                       subtitle: { type: 'text', label: 'Subtitle', default: 'Learn more about our services' },
-						                       background_image: { type: 'media', label: 'Background Image' },
-						                       text_color: { type: 'select', label: 'Text Color', options: [
-								                       { value: 'white', label: 'White' },
-								                       { value: 'black', label: 'Black' }
-							                       ], default: 'white' }
-					                       }
-				                       }, null, 2),
-				template: '<div className="hero" style={{ backgroundImage: `url(${props.background_image})` }}>\n  <h1 className={`text-${props.text_color}`}>{props.title}</h1>\n  <h2 className={`text-${props.text_color}`}>{props.subtitle}</h2>\n</div>',
-				is_active: true,
+			const fetchComponent = async () => {
+				setLoading(true);
+				try {
+					const response = await getComponent(id);
+
+					// Make a copy of the data
+					let formattedData = { ...response.data };
+
+					// Convert schema from array/object to JSON string for the editor
+					if (typeof formattedData.schema === 'object') {
+						formattedData.schema = JSON.stringify(formattedData.schema, null, 2);
+					}
+
+					setFormData(formattedData);
+					setErrors({});
+				} catch (error) {
+					console.error('Error fetching component:', error);
+					setErrors({
+						          api: 'Failed to load component. Please try again or go back to the components list.'
+					          });
+				} finally {
+					setLoading(false);
+				}
 			};
 
-			setFormData(mockComponent);
-			setLoading(false);
-
-			// Actual API implementation would be:
-			// const fetchComponent = async () => {
-			//   setLoading(true);
-			//   try {
-			//     const response = await fetch(`/api/components/${id}`);
-			//     const data = await response.json();
-			//     setFormData(data);
-			//   } catch (error) {
-			//     console.error('Error fetching component:', error);
-			//   } finally {
-			//     setLoading(false);
-			//   }
-			// };
-			// fetchComponent();
+			fetchComponent();
 		}
 	}, [id, isEditing]);
 
@@ -96,6 +90,17 @@ const ComponentEditor = () => {
 		}
 	};
 
+	// Format JSON function
+	const formatJSON = () => {
+		try {
+			const formatted = JSON.stringify(JSON.parse(formData.schema), null, 2);
+			setFormData({ ...formData, schema: formatted });
+			setErrors({ ...errors, schema: null });
+		} catch (error) {
+			setErrors({ ...errors, schema: 'Invalid JSON format' });
+		}
+	};
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setSaving(true);
@@ -106,9 +111,10 @@ const ComponentEditor = () => {
 		if (!formData.slug) newErrors.slug = 'Slug is required';
 		if (!formData.category) newErrors.category = 'Category is required';
 
+		// Validate and parse JSON schema
+		let parsedSchema;
 		try {
-			// Validate JSON schema
-			JSON.parse(formData.schema);
+			parsedSchema = JSON.parse(formData.schema);
 		} catch (error) {
 			newErrors.schema = 'Invalid JSON schema';
 		}
@@ -119,34 +125,33 @@ const ComponentEditor = () => {
 			return;
 		}
 
-		// Mock successful save - replace with API call in production
-		setTimeout(() => {
-			setSaving(false);
-			navigate('/admin/components');
-		}, 800);
+		try {
+			// Create data object with schema converted to object (not string)
+			const apiData = {
+				...formData,
+				schema: parsedSchema  // Parse the JSON string to an object for the API
+			};
 
-		// Actual API implementation would be:
-		// try {
-		//   const url = isEditing ? `/api/components/${id}` : '/api/components';
-		//   const method = isEditing ? 'PUT' : 'POST';
-		//
-		//   const response = await fetch(url, {
-		//     method,
-		//     headers: { 'Content-Type': 'application/json' },
-		//     body: JSON.stringify(formData)
-		//   });
-		//
-		//   if (response.ok) {
-		//     navigate('/admin/components');
-		//   } else {
-		//     const data = await response.json();
-		//     setErrors(data.errors || {});
-		//   }
-		// } catch (error) {
-		//   console.error('Error saving component:', error);
-		// } finally {
-		//   setSaving(false);
-		// }
+			if (isEditing) {
+				await updateComponent(id, apiData);
+			} else {
+				await createComponent(apiData);
+			}
+			navigate('/admin/components');
+		} catch (error) {
+			console.error('Error saving component:', error);
+
+			// Handle validation errors from API
+			if (error.response && error.response.status === 422) {
+				setErrors(error.response.data.errors || {});
+			} else {
+				setErrors({
+					          api: 'Failed to save component. Please try again.'
+				          });
+			}
+		} finally {
+			setSaving(false);
+		}
 	};
 
 	if (loading) {
@@ -163,6 +168,12 @@ const ComponentEditor = () => {
 				title={isEditing ? 'Edit Component' : 'Create Component'}
 				description={isEditing ? 'Modify an existing component' : 'Create a new reusable component'}
 			/>
+
+			{errors.api && (
+				<div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
+					<p>{errors.api}</p>
+				</div>
+			)}
 
 			<div className="bg-white shadow-md rounded-lg overflow-hidden p-6">
 				<form onSubmit={handleSubmit}>
@@ -205,6 +216,7 @@ const ComponentEditor = () => {
 								onChange={handleChange}
 								className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
 							></textarea>
+							{errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
 						</div>
 
 						<div>
@@ -234,37 +246,82 @@ const ComponentEditor = () => {
 								name="icon"
 								value={formData.icon}
 								onChange={handleChange}
-								className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+								className={`mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md ${errors.icon ? 'border-red-500' : ''}`}
 							/>
 							<p className="mt-1 text-xs text-gray-500">Icon identifier (e.g., 'banner', 'gallery')</p>
+							{errors.icon && <p className="mt-1 text-sm text-red-600">{errors.icon}</p>}
 						</div>
 
 						<div className="md:col-span-2">
-							<label htmlFor="schema" className="block text-sm font-medium text-gray-700">Schema (JSON)</label>
-							<textarea
-								id="schema"
-								name="schema"
-								rows="10"
+							<div className="flex justify-between items-center">
+								<label htmlFor="schema" className="block text-sm font-medium text-gray-700">Schema (JSON)</label>
+								<button
+									type="button"
+									onClick={formatJSON}
+									className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+								>
+									Format JSON
+								</button>
+							</div>
+							<AceEditor
+								mode="json"
+								theme="github"
+								name="schema-editor"
 								value={formData.schema}
-								onChange={handleChange}
-								className={`mt-1 font-mono text-sm focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm border-gray-300 rounded-md ${errors.schema ? 'border-red-500' : ''}`}
-								required
-							></textarea>
+								onChange={(value) => {
+									setFormData({ ...formData, schema: value });
+									if (errors.schema) {
+										setErrors({ ...errors, schema: null });
+									}
+								}}
+								fontSize={14}
+								width="100%"
+								height="250px"
+								showPrintMargin={false}
+								showGutter={true}
+								highlightActiveLine={true}
+								setOptions={{
+									enableBasicAutocompletion: true,
+									enableLiveAutocompletion: true,
+									enableSnippets: true,
+									showLineNumbers: true,
+									tabSize: 2,
+								}}
+								className={`mt-1 border border-gray-300 rounded-md ${errors.schema ? 'border-red-500' : ''}`}
+							/>
 							{errors.schema && <p className="mt-1 text-sm text-red-600">{errors.schema}</p>}
 							<p className="mt-1 text-xs text-gray-500">Define component properties in JSON format</p>
 						</div>
 
 						<div className="md:col-span-2">
 							<label htmlFor="template" className="block text-sm font-medium text-gray-700">Template (JSX)</label>
-							<textarea
-								id="template"
-								name="template"
-								rows="10"
+							<AceEditor
+								mode="jsx"
+								theme="github"
+								name="template-editor"
 								value={formData.template}
-								onChange={handleChange}
-								className="mt-1 font-mono text-sm focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm border-gray-300 rounded-md"
-								required
-							></textarea>
+								onChange={(value) => {
+									setFormData({ ...formData, template: value });
+									if (errors.template) {
+										setErrors({ ...errors, template: null });
+									}
+								}}
+								fontSize={14}
+								width="100%"
+								height="250px"
+								showPrintMargin={false}
+								showGutter={true}
+								highlightActiveLine={true}
+								setOptions={{
+									enableBasicAutocompletion: true,
+									enableLiveAutocompletion: true,
+									enableSnippets: true,
+									showLineNumbers: true,
+									tabSize: 2,
+								}}
+								className={`mt-1 border border-gray-300 rounded-md ${errors.template ? 'border-red-500' : ''}`}
+							/>
+							{errors.template && <p className="mt-1 text-sm text-red-600">{errors.template}</p>}
 							<p className="mt-1 text-xs text-gray-500">React component template (JSX)</p>
 						</div>
 
@@ -285,6 +342,7 @@ const ComponentEditor = () => {
 									<p className="text-gray-500">Make this component available for use</p>
 								</div>
 							</div>
+							{errors.is_active && <p className="mt-1 text-sm text-red-600">{errors.is_active}</p>}
 						</div>
 					</div>
 

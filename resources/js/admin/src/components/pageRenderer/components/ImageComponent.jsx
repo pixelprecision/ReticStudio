@@ -1,5 +1,6 @@
 // resources/js/admin/src/components/pageRenderer/components/ImageComponent.jsx
 import React from 'react';
+import { extractArbitraryStyles, processArbitraryClasses } from '../../../utils/tailwindUtils';
 
 const ImageComponent = ({
   src,
@@ -8,7 +9,8 @@ const ImageComponent = ({
   height = 'auto',
   alignment = 'center',
   caption = '',
-  componentId
+  componentId,
+  extraClasses = ''
 }) => {
   // Alignment classes
   const alignmentClasses = {
@@ -17,8 +19,16 @@ const ImageComponent = ({
     right: 'ml-auto'
   };
 
+  // Process extraClasses to handle arbitrary Tailwind classes
+  const { styles, remainingClasses } = extractArbitraryStyles(extraClasses);
+  const processedExtraClasses = processArbitraryClasses(extraClasses);
+
   return (
-    <figure id={componentId} className="image-component mb-6">
+    <figure 
+      id={componentId} 
+      className={`image-component mb-6 ${processedExtraClasses}`}
+      style={styles}
+    >
       <img
         src={src}
         alt={alt}

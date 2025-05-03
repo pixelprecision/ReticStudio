@@ -1,5 +1,6 @@
 // resources/js/admin/src/components/pageRenderer/components/ProcessStepComponent.jsx
 import React from 'react';
+import { extractArbitraryStyles, processArbitraryClasses } from '../../../utils/tailwindUtils';
 
 const ProcessStepComponent = ({
   title,
@@ -7,7 +8,8 @@ const ProcessStepComponent = ({
   backgroundColor = 'gray-50',
   steps = [],
   layout = 'grid',
-  componentId
+  componentId,
+  extraClasses = ''
 }) => {
   // Background color classes
   const bgColorClasses = {
@@ -96,10 +98,15 @@ const ProcessStepComponent = ({
     </div>
   );
 
+  // Process extraClasses to handle arbitrary Tailwind classes
+  const { styles, remainingClasses } = extractArbitraryStyles(extraClasses);
+  const processedExtraClasses = processArbitraryClasses(extraClasses);
+
   return (
     <section
       id={componentId}
-      className={`py-20 ${bgColorClasses[backgroundColor] || 'bg-gray-50'}`}
+      className={`py-20 ${bgColorClasses[backgroundColor] || 'bg-gray-50'} ${processedExtraClasses}`}
+      style={styles}
     >
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="text-center mb-16">

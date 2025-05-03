@@ -1,5 +1,6 @@
 // resources/js/admin/src/components/pageRenderer/components/DividerComponent.jsx
 import React from 'react';
+import { extractArbitraryStyles, processArbitraryClasses } from '../../../utils/tailwindUtils';
 
 const DividerComponent = ({
   style = 'solid',
@@ -7,7 +8,8 @@ const DividerComponent = ({
   width = 'full',
   thickness = 'thin',
   margin = 'normal',
-  componentId
+  componentId,
+  extraClasses = ''
 }) => {
   // Style classes
   const styleClasses = {
@@ -52,10 +54,15 @@ const DividerComponent = ({
     xlarge: 'my-12'
   };
 
+  // Process extraClasses to handle arbitrary Tailwind classes
+  const { styles, remainingClasses } = extractArbitraryStyles(extraClasses);
+  const processedExtraClasses = processArbitraryClasses(extraClasses);
+
   return (
     <hr
       id={componentId}
-      className={`divider-component ${styleClasses[style] || 'border-solid'} ${colorClasses[color] || 'border-gray-200'} ${widthClasses[width] || 'w-full'} ${thicknessClasses[thickness] || 'border-t'} ${marginClasses[margin] || 'my-4'}`}
+      className={`divider-component ${styleClasses[style] || 'border-solid'} ${colorClasses[color] || 'border-gray-200'} ${widthClasses[width] || 'w-full'} ${thicknessClasses[thickness] || 'border-t'} ${marginClasses[margin] || 'my-4'} ${processedExtraClasses}`}
+      style={styles}
     />
   );
 };

@@ -1,7 +1,7 @@
 # Retic Laravel Studio
 
 <p align="center">
-<img src="public/images/laravelcms-logo.png" width="400" alt="Retic Laravel Studio Logo">
+<img src="public/images/retic-logo.png" width="400" alt="Retic Laravel Studio Logo">
 </p>
 
 <p align="center">

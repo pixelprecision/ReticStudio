@@ -12,7 +12,9 @@ import {
 	FiSettings,
 	FiPenTool,
 	FiMenu,
-	FiPackage
+	FiPackage,
+	FiNavigation,
+	FiAnchor
 } from 'react-icons/fi';
 
 const NavItem = ({ to, icon: Icon, children }) => {
@@ -43,6 +45,8 @@ const Sidebar = ({ mobile = false }) => {
 			<NavItem to="/admin/media" icon={FiImage}>Media</NavItem>
 			<NavItem to="/admin/menus" icon={FiMenu}>Menus</NavItem>
 			<NavItem to="/admin/themes" icon={FiPenTool}>Themes</NavItem>
+			<NavItem to="/admin/header" icon={FiNavigation}>Header</NavItem>
+			<NavItem to="/admin/footer" icon={FiAnchor}>Footer</NavItem>
 			<NavItem to="/admin/plugins" icon={FiPackage}>Plugins</NavItem>
 			<NavItem to="/admin/settings" icon={FiSettings}>Settings</NavItem>
 		</nav>

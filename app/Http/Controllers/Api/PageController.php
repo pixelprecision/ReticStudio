@@ -44,6 +44,7 @@ class PageController extends Controller {
 			'meta_title'       => 'nullable|string|max:255',
 			'meta_description' => 'nullable|string',
 			'meta_keywords'    => 'nullable|string',
+				'layout'           => 'nullable|string',
 			'is_published'     => 'boolean',
 		]);
 
@@ -99,6 +100,7 @@ class PageController extends Controller {
 			'meta_title'       => 'nullable|string|max:255',
 			'meta_description' => 'nullable|string',
 			'meta_keywords'    => 'nullable|string',
+				'layout'           => 'nullable|string',
 			'is_published'     => 'boolean',
 		]);
 
@@ -167,6 +169,7 @@ class PageController extends Controller {
 			'meta_title'       => $revision->meta_title,
 			'meta_description' => $revision->meta_description,
 			'meta_keywords'    => $revision->meta_keywords,
+				'layout'           => $revision->layout,
 			'updated_by'       => auth()->id(),
 		]);
 

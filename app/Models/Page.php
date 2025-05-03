@@ -21,6 +21,7 @@
 			'meta_title',
 			'meta_description',
 			'meta_keywords',
+		'layout',
 			'is_published',
 			'published_at',
 			'created_by',
@@ -67,6 +68,7 @@
 				'meta_title' => $this->meta_title,
 				'meta_description' => $this->meta_description,
 				'meta_keywords' => $this->meta_keywords,
+				'layout' => $this->layout,
 				'created_by' => auth()->id(),
 			]);
 		}

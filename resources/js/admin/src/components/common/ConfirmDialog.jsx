@@ -2,15 +2,17 @@
 import React from 'react';
 
 const ConfirmDialog = ({
-	                       isOpen,
-	                       title,
-	                       message,
+	                       isOpen = false,
+	                       title = 'Confirm Action',
+	                       message = 'Are you sure you want to proceed?',
 	                       onConfirm,
 	                       onCancel,
 	                       confirmButtonText = 'Confirm',
 	                       cancelButtonText = 'Cancel',
 	                       type = 'confirm',
                        }) => {
+	console.log('ConfirmDialog rendered with isOpen:', isOpen);
+	
 	if (!isOpen) return null;
 
 	const getButtonClasses = () => {

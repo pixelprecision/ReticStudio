@@ -3,6 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import PageHeader from '../../components/common/PageHeader';
 import { FiDownload, FiTrash2, FiAlertTriangle, FiCheck } from 'react-icons/fi';
+import { 
+    getForm, 
+    getFormSubmissions, 
+    deleteFormSubmission,
+    markAsSpam,
+    markAsNotSpam,
+    exportFormSubmissions
+} from '../../api/formsApi';
+import { showToast } from '../../api/apiClient';
 
 const FormSubmissions = () => {
 	const { id } = useParams();
@@ -11,138 +20,92 @@ const FormSubmissions = () => {
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		// Mock data fetch - replace with API call in production
-		const mockForm = {
-			id: parseInt(id),
-			name: 'Contact Form',
-			slug: 'contact-form',
-			fields: [
-				{ name: 'name', label: 'Your Name', type: 'text' },
-				{ name: 'email', label: 'Email Address', type: 'email' },
-				{ name: 'subject', label: 'Subject', type: 'text' },
-				{ name: 'message', label: 'Message', type: 'textarea' },
-			]
-		};
-
-		const mockSubmissions = [
-			{
-				id: 1,
-				created_at: '2023-08-12T14:23:45',
-				data: { name: 'John Doe', email: 'john@example.com', subject: 'General Inquiry', message: 'I have some questions about your services.' },
-				ip_address: '192.168.1.1',
-				is_spam: false
-			},
-			{
-				id: 2,
-				created_at: '2023-08-13T10:15:22',
-				data: { name: 'Jane Smith', email: 'jane@example.com', subject: 'Support Request', message: 'I need help with my account.' },
-				ip_address: '192.168.1.2',
-				is_spam: false
-			},
-			{
-				id: 3,
-				created_at: '2023-08-14T08:45:11',
-				data: { name: 'Mike Johnson', email: 'mike@example.com', subject: 'Partnership Opportunity', message: 'Let\'s discuss a potential collaboration.' },
-				ip_address: '192.168.1.3',
-				is_spam: false
-			},
-			{
-				id: 4,
-				created_at: '2023-08-15T16:30:57',
-				data: { name: 'Buy Now!', email: 'spam@example.com', subject: 'Special Offer!!!', message: 'Click here for a special discount on our products!' },
-				ip_address: '192.168.1.4',
-				is_spam: true
-			},
-		];
-
-		setForm(mockForm);
-		setSubmissions(mockSubmissions);
-		setLoading(false);
-
-		// Actual API implementation would be:
-		// const fetchData = async () => {
-		//   setLoading(true);
-		//   try {
-		//     const formResponse = await fetch(`/api/forms/${id}`);
-		//     const formData = await formResponse.json();
-		//     setForm(formData);
-		//
-		//     const submissionsResponse = await fetch(`/api/forms/${id}/submissions`);
-		//     const submissionsData = await submissionsResponse.json();
-		//     setSubmissions(submissionsData);
-		//   } catch (error) {
-		//     console.error('Error fetching data:', error);
-		//   } finally {
-		//     setLoading(false);
-		//   }
-		// };
-		// fetchData();
+		fetchData();
 	}, [id]);
 
-	const handleDelete = (submissionId) => {
-		if (window.confirm('Are you sure you want to delete this submission?')) {
-			// Mock deletion - replace with API call in production
-			setSubmissions(submissions.filter(submission => submission.id !== submissionId));
+	const fetchData = async () => {
+		setLoading(true);
+		try {
+			const formResponse = await getForm(id);
+			const formData = formResponse.data;
+			setForm(formData);
 
-			// Actual API implementation would be:
-			// const deleteSubmission = async () => {
-			//   try {
-			//     await fetch(`/api/forms/${id}/submissions/${submissionId}`, { method: 'DELETE' });
-			//     setSubmissions(submissions.filter(submission => submission.id !== submissionId));
-			//   } catch (error) {
-			//     console.error('Error deleting submission:', error);
-			//   }
-			// };
-			// deleteSubmission();
+			const submissionsResponse = await getFormSubmissions(id);
+			const submissionsData = submissionsResponse.data.data || submissionsResponse.data;
+			setSubmissions(submissionsData);
+		} catch (error) {
+			console.error('Error fetching data:', error);
+			showToast('Error', 'Failed to fetch form submissions', 'error');
+		} finally {
+			setLoading(false);
 		}
 	};
 
-	const handleMarkAsSpam = (submissionId) => {
-		// Mock update - replace with API call in production
-		setSubmissions(submissions.map(submission =>
-			                               submission.id === submissionId ? { ...submission, is_spam: true } : submission
-		));
-
-		// Actual API implementation would be:
-		// const markAsSpam = async () => {
-		//   try {
-		//     await fetch(`/api/forms/${id}/submissions/${submissionId}/mark-as-spam`, { method: 'POST' });
-		//     setSubmissions(submissions.map(submission =>
-		//       submission.id === submissionId ? { ...submission, is_spam: true } : submission
-		//     ));
-		//   } catch (error) {
-		//     console.error('Error marking as spam:', error);
-		//   }
-		// };
-		// markAsSpam();
+	const handleDelete = async (submissionId) => {
+		if (!window.confirm('Are you sure you want to delete this submission?')) {
+			return;
+		}
+		
+		try {
+			await deleteFormSubmission(id, submissionId);
+			showToast('Success', 'Submission deleted successfully', 'success');
+			setSubmissions(submissions.filter(submission => submission.id !== submissionId));
+		} catch (error) {
+			console.error('Error deleting submission:', error);
+			showToast('Error', 'Failed to delete submission', 'error');
+		}
 	};
 
-	const handleMarkAsNotSpam = (submissionId) => {
-		// Mock update - replace with API call in production
-		setSubmissions(submissions.map(submission =>
-			                               submission.id === submissionId ? { ...submission, is_spam: false } : submission
-		));
-
-		// Actual API implementation would be:
-		// const markAsNotSpam = async () => {
-		//   try {
-		//     await fetch(`/api/forms/${id}/submissions/${submissionId}/mark-as-not-spam`, { method: 'POST' });
-		//     setSubmissions(submissions.map(submission =>
-		//       submission.id === submissionId ? { ...submission, is_spam: false } : submission
-		//     ));
-		//   } catch (error) {
-		//     console.error('Error marking as not spam:', error);
-		//   }
-		// };
-		// markAsNotSpam();
+	const handleMarkAsSpam = async (submissionId) => {
+		try {
+			await markAsSpam(id, submissionId);
+			showToast('Success', 'Submission marked as spam', 'success');
+			setSubmissions(submissions.map(submission =>
+				submission.id === submissionId ? { ...submission, is_spam: true } : submission
+			));
+		} catch (error) {
+			console.error('Error marking as spam:', error);
+			showToast('Error', 'Failed to mark submission as spam', 'error');
+		}
 	};
 
-	const handleExport = (format = 'csv') => {
-		// Mock export - in production this would trigger a file download
-		alert(`Exporting submissions in ${format.toUpperCase()} format`);
+	const handleMarkAsNotSpam = async (submissionId) => {
+		try {
+			await markAsNotSpam(id, submissionId);
+			showToast('Success', 'Submission marked as not spam', 'success');
+			setSubmissions(submissions.map(submission =>
+				submission.id === submissionId ? { ...submission, is_spam: false } : submission
+			));
+		} catch (error) {
+			console.error('Error marking as not spam:', error);
+			showToast('Error', 'Failed to mark submission as not spam', 'error');
+		}
+	};
 
-		// Actual API implementation would be:
-		// window.location.href = `/api/forms/${id}/export?format=${format}`;
+	const handleExport = async (format = 'csv') => {
+		try {
+			const response = await exportFormSubmissions(id, format);
+			
+			// Create a blob and download it
+			const blob = new Blob([response.data], { 
+				type: format === 'json' 
+					? 'application/json' 
+					: 'text/csv;charset=utf-8;' 
+			});
+			
+			const url = window.URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.setAttribute('download', `${form.slug}-submissions.${format}`);
+			document.body.appendChild(link);
+			link.click();
+			link.parentNode.removeChild(link);
+			
+			showToast('Success', `Submissions exported as ${format.toUpperCase()}`, 'success');
+		} catch (error) {
+			console.error('Error exporting submissions:', error);
+			showToast('Error', 'Failed to export submissions', 'error');
+		}
 	};
 
 	if (loading) {

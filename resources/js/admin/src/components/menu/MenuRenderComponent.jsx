@@ -1,6 +1,7 @@
 // src/components/menu/MenuRenderComponent.jsx
 import React from 'react';
-import { Link } from 'react-router-dom';
+import {Link} from 'react-router-dom';
+import {getMenu} from '../../api/menusApi.js';
 
 const MenuItem = ({ item, className = '' }) => {
 	const hasChildren = item.items && item.items.length > 0;
@@ -32,7 +33,7 @@ const DropdownMenu = ({ items, className = '' }) => {
 		<ul className={`dropdown-menu ${className}`}>
 			{items.map((item) => (
 				<li key={item.id} className="relative group">
-					<MenuItem item={item} className="block px-4 py-2 text-gray-700 hover:bg-gray-100" />
+					<MenuItem item={item} className="block px-4 py-2 text-gray-700 hover:bg-gray-100"/>
 
 					{item.items && item.items.length > 0 && (
 						<DropdownMenu
@@ -48,17 +49,54 @@ const DropdownMenu = ({ items, className = '' }) => {
 
 const MenuRenderComponent = ({
 	                             menu,
+	                             menuId,
 	                             horizontal = true,
 	                             className = '',
 	                             itemClassName = '',
 	                             activeClassName = 'text-blue-600',
 	                             dropdownClassName = '',
-	                             mobileMenuBreakpoint = 'md'
+	                             mobileMenuBreakpoint = 'md',
+	                             menuPosition = 'header',
+	                             style
                              }) => {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+	const [menuData, setMenuData] = React.useState(null);
 
-	if (!menu || !menu.items || !Array.isArray(menu.items)) {
-		return null;
+	// Handle menu ID - if menuId is provided but no menu object
+	React.useEffect(() => {
+		const fetchMenu = async () => {
+			if (menuId && !menu) {
+				try {
+					// You would typically fetch the menu by ID here
+					console.log('Menu ID provided:', menuId);
+					// For now, use a placeholder menu
+					const menu = await getMenu(menuId);
+					setMenuData(menu);
+				}
+				catch (error) {
+					console.error('Error fetching menu by ID:', error);
+				}
+			} else if (menu) {
+				setMenuData(menu);
+			}
+		};
+
+		fetchMenu();
+	}, [menuId, menu]);
+
+	// Apply the style prop to determine horizontal/vertical
+	React.useEffect(() => {
+		if (style && style === 'vertical') {
+			horizontal = false;
+		}
+	}, [style]);
+
+	// If no menu data is available yet
+	if (!menuData || !menuData.items || !Array.isArray(menuData.items)) {
+		console.log("MENU POSITION", menuPosition);
+		console.log(menuPosition+'-MenuData', menuData);
+		console.log(menuPosition+'-Menu', menu);
+		return <div className="menu-loading">Loading menu...</div>;
 	}
 
 	return (
@@ -70,13 +108,13 @@ const MenuRenderComponent = ({
 			>
 				<svg className="h-4 w-4 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
 					<title>Menu</title>
-					<path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z" />
+					<path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/>
 				</svg>
 			</button>
 
 			{/* Desktop menu */}
 			<ul className={`${mobileMenuBreakpoint}:flex ${horizontal ? 'flex-row' : 'flex-col'} hidden`}>
-				{menu.items.map((item) => (
+				{menuData.items.map((item) => (
 					<li key={item.id} className="relative group">
 						<MenuItem
 							item={item}
@@ -96,7 +134,7 @@ const MenuRenderComponent = ({
 			{/* Mobile menu */}
 			<div className={`${isMobileMenuOpen ? 'block' : 'hidden'} ${mobileMenuBreakpoint}:hidden w-full`}>
 				<ul className="flex flex-col w-full">
-					{menu.items.map((item) => {
+					{menuData.items.map((item) => {
 						// First level items
 						const hasSubItems = item.items && item.items.length > 0;
 						return (

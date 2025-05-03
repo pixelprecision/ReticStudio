@@ -7,7 +7,7 @@ const AuthLayout = () => {
 		<div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50">
 			<div className="sm:mx-auto sm:w-full sm:max-w-md">
 				<h1 className="text-center text-3xl font-extrabold text-gray-900">
-					LaravelCMS Builder
+					Retic Laravel Studio
 				</h1>
 			</div>
 
@@ -17,7 +17,7 @@ const AuthLayout = () => {
 				</div>
 				<div className="mt-6 text-center">
 					<p className="text-sm text-gray-500">
-						© {new Date().getFullYear()} LaravelCMS Builder. All rights reserved.
+						© {new Date().getFullYear()} Retic Laravel Studio. All rights reserved.
 					</p>
 				</div>
 			</div>

@@ -18,7 +18,7 @@
 				[
 					'group' => 'general',
 					'key' => 'site_name',
-					'value' => 'LaravelCMS Builder',
+					'value' => 'Retic Laravel Studio',
 					'type' => 'string',
 					'is_system' => true,
 				],
@@ -64,7 +64,7 @@
 				[
 					'group' => 'seo',
 					'key' => 'meta_description',
-					'value' => 'LaravelCMS Builder - A powerful CMS built with Laravel',
+					'value' => 'Retic Laravel Studio - A powerful CMS built with Laravel',
 					'type' => 'string',
 					'is_system' => true,
 				],
@@ -121,7 +121,7 @@
 				[
 					'group' => 'email',
 					'key' => 'from_name',
-					'value' => 'LaravelCMS Builder',
+					'value' => 'Retic Laravel Studio',
 					'type' => 'string',
 					'is_system' => true,
 				],
@@ -135,7 +135,74 @@
 			];
 			
 			// Create all settings
-			foreach (array_merge($generalSettings, $seoSettings, $socialSettings, $emailSettings) as $setting) {
+			// Footer settings
+			$footerSettings = [
+				[
+					'group' => 'footer',
+					'key' => 'show_footer',
+					'value' => true,
+					'type' => 'boolean',
+					'is_system' => false,
+				],
+				[
+					'group' => 'footer',
+					'key' => 'show_footer_bar',
+					'value' => true,
+					'type' => 'boolean',
+					'is_system' => false,
+				],
+				[
+					'group' => 'footer',
+					'key' => 'footer_style',
+					'value' => 'standard',
+					'type' => 'string',
+					'is_system' => false,
+				],
+				[
+					'group' => 'footer',
+					'key' => 'footer_background_color',
+					'value' => '#1f2937',
+					'type' => 'string',
+					'is_system' => false,
+				],
+				[
+					'group' => 'footer',
+					'key' => 'footer_text_color',
+					'value' => '#ffffff',
+					'type' => 'string',
+					'is_system' => false,
+				],
+				[
+					'group' => 'footer',
+					'key' => 'copyright_text',
+					'value' => '© {year} Your Site. All rights reserved.',
+					'type' => 'string',
+					'is_system' => false,
+				],
+				[
+					'group' => 'footer',
+					'key' => 'footer_columns',
+					'value' => 3,
+					'type' => 'integer',
+					'is_system' => false,
+				],
+				[
+					'group' => 'footer',
+					'key' => 'custom_footer_classes',
+					'value' => '',
+					'type' => 'string',
+					'is_system' => false,
+				],
+				[
+					'group' => 'footer',
+					'key' => 'custom_footer_bar_classes',
+					'value' => '',
+					'type' => 'string',
+					'is_system' => false,
+				],
+			];
+
+			foreach (array_merge($generalSettings, $seoSettings, $socialSettings, $emailSettings, $footerSettings) as $setting) {
 				Setting::create($setting);
 			}
 		}

@@ -17,7 +17,7 @@
 			Theme::create([
 				'name' => 'Default Theme',
 				'slug' => 'default-theme',
-				'description' => 'The default theme for LaravelCMS Builder.',
+				'description' => 'The default theme for Retic Laravel Studio.',
 				'styles' => [
 					'colors' => [
 						'primary' => '#3490dc',
