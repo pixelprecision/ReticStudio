@@ -4,8 +4,9 @@ import ComponentRenderer from './ComponentRenderer';
 
 /**
  * Renders an entire page based on the provided content
+ * Now accepts pageType and pageData to pass to parent layout components
  */
-const PageRenderer = ({ content }) => {
+const PageRenderer = ({ content, pageType, pageData }) => {
   // If content is a string (JSON), parse it
   const contentArray = typeof content === 'string'
     ? JSON.parse(content)
@@ -25,9 +26,13 @@ const PageRenderer = ({ content }) => {
   }
 
   return (
-    <div className="page-renderer">
+    <div className="page-renderer" data-page-type={pageType || 'page'}>
       {contentArray.map((component) => (
-        <ComponentRenderer key={component.id} component={component} />
+        <ComponentRenderer 
+          key={component.id} 
+          component={component}
+          pageData={pageData}
+        />
       ))}
     </div>
   );

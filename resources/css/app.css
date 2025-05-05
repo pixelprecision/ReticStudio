@@ -13,7 +13,7 @@
 }
 
 .dropdown.active .dropdown-menu {
-	display: block;
+	display: block !important;
 }
 
 /* Ensure dropdowns stay within the viewport */

@@ -49,3 +49,56 @@ if (typeof window !== 'undefined') {
       };
   }());
 }
+
+// Monaco Editor polyfills and fixes
+if (typeof window !== 'undefined') {
+  // Ensure self is defined (used by Monaco)
+  if (typeof self === 'undefined') {
+    window.self = window;
+  }
+  
+  // Ensure navigator is defined
+  if (typeof navigator === 'undefined') {
+    window.navigator = {
+      userAgent: 'Mozilla/5.0',
+      language: 'en-US'
+    };
+  }
+  
+  // Ensure XMLHttpRequest is defined
+  if (typeof XMLHttpRequest === 'undefined') {
+    window.XMLHttpRequest = function() {
+      try {
+        return new ActiveXObject("Msxml2.XMLHTTP.6.0");
+      } catch (e1) {
+        try {
+          return new ActiveXObject("Msxml2.XMLHTTP.3.0");
+        } catch (e2) {
+          throw new Error("XMLHttpRequest is not supported");
+        }
+      }
+    };
+  }
+  
+  // Ensure Worker is defined
+  if (typeof Worker === 'undefined') {
+    window.Worker = class MockWorker {
+      constructor(stringUrl) {
+        this.url = stringUrl;
+        this.onmessage = null;
+      }
+      
+      postMessage(msg) {
+        if (this.onmessage) {
+          setTimeout(() => {
+            this.onmessage({ data: { type: 'mock', message: msg } });
+          }, 0);
+        }
+      }
+      
+      terminate() {
+        // Do nothing
+      }
+    };
+  }
+}

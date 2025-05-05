@@ -5,7 +5,7 @@ import MenuRenderComponent from '../../menu/MenuRenderComponent';
 import HeaderComponent from '../../pageRenderer/components/HeaderComponent';
 import FooterComponent from '../../pageRenderer/components/FooterComponent';
 
-const FullWidthLayout = ({ children, pageTitle, pageDescription }) => {
+const FullWidthLayout = ({ children, pageTitle, pageDescription, layoutName }) => {
   const { theme, menus } = useTheme();
 
   if (!theme) {
@@ -53,9 +53,7 @@ const FullWidthLayout = ({ children, pageTitle, pageDescription }) => {
   };
 
   return (
-    <div className="theme-layout min-h-screen flex flex-col">
-      {/* Dynamic Header - Full Width */}
-      <HeaderComponent settings={headerSettings} />
+    <div className="theme-layout min-h-screen flex flex-col" data-g={layoutName}>
 
       {/* Main Content - Full Width */}
       <main className="flex-grow">
@@ -75,15 +73,6 @@ const FullWidthLayout = ({ children, pageTitle, pageDescription }) => {
         </div>
       </main>
 
-      {/* Dynamic Footer - Full Width */}
-      <FooterComponent settings={{
-        site_name: siteName,
-        site_description: siteDescription,
-        container_width: 'none',
-        footer_background_color: '#1f2937',
-        footer_text_color: '#ffffff',
-        custom_footer_classes: 'mt-auto'
-      }} />
     </div>
   );
 };

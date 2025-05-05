@@ -1,6 +1,7 @@
 // resources/js/admin/src/components/pageBuilder/ComponentSettings.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import RichTextEditor from '../editors/RichTextEditor';
+import MediaChooser from '../media/MediaChooser';
 
 const ComponentSettings = ({ component, componentDefinition, onSave, onCancel }) => {
 	// Parse schema if it's a string
@@ -285,28 +286,63 @@ const ComponentSettings = ({ component, componentDefinition, onSave, onCancel })
 					/>
 				);
 			case 'media':
-				// In a real application, you would integrate with a media selector
+				// Determine the media type based on schema configuration or default to supporting all media types
+				// Check all possible field configurations for media type
+				const mediaType = schema.mediaType || 
+				                 (schema.accept?.startsWith('video/') ? 'video' : 
+				                 schema.accept?.startsWith('image/') ? 'image' : 
+				                 'all');
+				
+				// Log the schema details for debugging
+				console.log(`Media field ${key} schema:`, schema);
+				
+				const acceptValue = mediaType === 'image' ? 'image/*' : 
+								    mediaType === 'video' ? 'video/*' : 
+								    schema.accept || 'image/*,video/*,audio/*';
+								    
+				const previewTypeValue = mediaType === 'image' ? 'image' : 
+									    mediaType === 'video' ? 'video' : 
+									    // Extract type from accept value if present
+									    schema.accept?.startsWith('video/') ? 'video' :
+									    schema.accept?.startsWith('image/') ? 'image' :
+									    schema.accept?.startsWith('audio/') ? 'audio' :
+									    'image'; // Default to image preview
+
+				// Determine the correct media type from the file extension if we have a value
+				let detectedType = previewTypeValue;
+				if (value && typeof value === 'string') {
+					const fileExt = value.split('.').pop().toLowerCase();
+					const videoExts = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'wmv', 'flv', 'mkv'];
+					const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
+					
+					if (videoExts.includes(fileExt)) {
+						detectedType = 'video';
+					} else if (imageExts.includes(fileExt)) {
+						detectedType = 'image';
+					}
+				}
+
+				console.log(`MediaChooser for ${key}: type=${detectedType}, value=${value}`);
+
 				return (
 					<div>
-						<input
-							type="text"
-							id={key}
-							name={key}
+						<MediaChooser
 							value={value || ''}
-							onChange={handleChange}
-							className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-							placeholder="Media URL"
-						/>
-						<button
-							type="button"
-							className="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-							onClick={() => {
-								// In a real application, this would open a media browser
-								alert('Media browser would open here');
+							onChange={(mediaUrl) => {
+								console.log('Media selected for', key, ':', mediaUrl);
+								setSettings(prev => ({
+									...prev,
+									[key]: mediaUrl
+								}));
 							}}
-						>
-							Browse Media
-						</button>
+							label={false} // Hide label since we already have one from the parent
+							accept={acceptValue}
+							previewType={detectedType}
+							placeholder={`No ${mediaType} selected`}
+							endpoint="/api/media" // Ensure proper endpoint
+							maxSize={1024 * 1024 * 1024} // 1GB max size
+							fileParamName="file" // Make sure file parameter name is correct
+						/>
 					</div>
 				);
 			case 'array':

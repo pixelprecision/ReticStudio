@@ -18,20 +18,20 @@ apiClient.interceptors.request.use(
 		if (token) {
 			config.headers['Authorization'] = `Bearer ${token}`;
 		}
-		
+
 		// Handle PUT requests properly for Laravel 12
 		if (config.method === 'put') {
 			// Make sure PUT requests have the correct headers for Laravel
 			config.headers['X-HTTP-Method-Override'] = 'PUT';
 			config.headers['Content-Type'] = 'application/json';
 			config.headers['Accept'] = 'application/json';
-			
+
 			// Add CSRF token if available
 			const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 			if (csrfToken) {
 				config.headers['X-CSRF-TOKEN'] = csrfToken;
 			}
-			
+
 			// Convert FormData to JSON if needed
 			if (config.data instanceof FormData) {
 				const formDataObj = {};
@@ -44,9 +44,10 @@ apiClient.interceptors.request.use(
 					}
 				}
 				config.data = formDataObj;
+				console.log(config);
 			}
 		}
-		
+
 		return config;
 	},
 	(error) => {

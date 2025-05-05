@@ -10,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css'
 // Layout Components
 import AdminLayout from './components/layout/AdminLayout'
 import AuthLayout from './components/layout/AuthLayout'
+import PublicLayout from './components/layout/PublicLayout'
 
 // Auth Pages
 import Login from './pages/auth/Login'
@@ -42,16 +43,26 @@ import PluginEditor from './pages/plugins/PluginEditor'
 import HeaderEditor from './pages/header/HeaderEditor'
 import FooterEditor from './pages/footer/FooterEditor'
 
+// E-commerce Components
+import ProductsList from './pages/store/products/ProductsList'
+import ProductEditor from './pages/store/products/ProductEditor'
+import CategoryList from './pages/store/categories/CategoryList'
+import CategoryEditor from './pages/store/categories/CategoryEditor'
+import ProductBrandsList from './pages/store/brands/ProductBrandsList'
+import ProductBrandEditor from './pages/store/brands/ProductBrandEditor'
+import CustomersList from './pages/store/customers/CustomersList'
+import CustomerEditor from './pages/store/customers/CustomerEditor'
+import OrdersList from './pages/store/orders/OrdersList'
+import OrderDetail from './pages/store/orders/OrderDetail'
+import StoreSettings from './pages/store/settings/StoreSettings'
+import LoadingScreen from "./components/theme/LoadingScreen.jsx";
+
 // Private Route component
 const PrivateRoute = ({ children }) => {
 	const { isAuthenticated, loading } = useAuth()
 
 	if (loading) {
-		return (
-			<div className="flex items-center justify-center min-h-screen">
-				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-			</div>
-		)
+		return <LoadingScreen />;
 	}
 
 	return isAuthenticated ? <>{children}</> : <Navigate to="/admin/login" />
@@ -132,17 +143,70 @@ const App = () => {
 
 					{/* Header */}
 					<Route path="header" element={<HeaderEditor />} />
-					
+
 					{/* Footer */}
 					<Route path="footer" element={<FooterEditor />} />
+
+					{/* E-commerce Routes */}
+					{/* Products */}
+					<Route path="store/products" element={<ProductsList />} />
+					<Route path="store/products/create" element={<ProductEditor />} />
+					<Route path="store/products/edit/:id" element={<ProductEditor />} />
+					<Route path="store/products/view/:id" element={<ProductEditor isViewOnly={true} />} />
+
+					{/* Categories */}
+					<Route path="store/categories" element={<CategoryList />} />
+					<Route path="store/categories/create" element={<CategoryEditor />} />
+					<Route path="store/categories/edit/:id" element={<CategoryEditor />} />
+
+					{/* Brands */}
+					<Route path="store/brands" element={<ProductBrandsList />} />
+					<Route path="store/brands/create" element={<ProductBrandEditor />} />
+					<Route path="store/brands/edit/:id" element={<ProductBrandEditor />} />
+
+					{/* Customers */}
+					<Route path="store/customers" element={<CustomersList />} />
+					<Route path="store/customers/create" element={<CustomerEditor />} />
+					<Route path="store/customers/edit/:id" element={<CustomerEditor />} />
+
+					{/* Orders */}
+					<Route path="store/orders" element={<OrdersList />} />
+					<Route path="store/orders/:id" element={<OrderDetail />} />
+
+					{/* Store Settings */}
+					<Route path="store/settings" element={<StoreSettings />} />
 				</Route>
 
-				{/* Home page route */}
-				<Route path="/" element={<PublicPage isPreview={false} isHomePage={true} />} />
+				{/* Public Routes wrapped in PublicLayout */}
+				<Route element={<PublicLayout />}>
+					{/* Home page route */}
+					<Route path="/" element={<PublicPage isPreview={false} isHomePage={true} />} />
 
-				{/* Public Page Routes */}
-				<Route path="/:slug" element={<PublicPage isPreview={false} />} />
-				<Route path="/preview/:slug" element={<PublicPage isPreview={true} />} />
+					{/* Public Page Routes */}
+					<Route path="/:slug" element={<PublicPage isPreview={false} />} />
+					<Route path="/preview/:slug" element={<PublicPage isPreview={true} />} />
+
+					{/* E-commerce Public Routes */}
+					<Route path="/store" element={<PublicPage isPreview={false} />} />
+
+					{/* Dynamic Category Routes */}
+					<Route path="/category" element={<PublicPage isPreview={false} pageType="category_index" />} />
+					<Route path="/category/:slug" element={<PublicPage isPreview={false} pageType="category_single" />} />
+
+					{/* Dynamic Product Routes */}
+					<Route path="/product/:slug" element={<PublicPage isPreview={false} pageType="product_single" />} />
+
+					{/* Legacy Store Routes */}
+					<Route path="/store/products" element={<PublicPage isPreview={false} />} />
+					<Route path="/store/products/:slug" element={<PublicPage isPreview={false} />} />
+					<Route path="/store/categories/:slug" element={<PublicPage isPreview={false} />} />
+					<Route path="/store/brands/:slug" element={<PublicPage isPreview={false} />} />
+					<Route path="/store/cart" element={<PublicPage isPreview={false} />} />
+					<Route path="/store/checkout" element={<PublicPage isPreview={false} />} />
+					<Route path="/store/account" element={<PublicPage isPreview={false} />} />
+					<Route path="/store/account/orders" element={<PublicPage isPreview={false} />} />
+					<Route path="/store/account/orders/:id" element={<PublicPage isPreview={false} />} />
+				</Route>
 
 				{/* Fallback - redirect to admin dashboard if authenticated, or login if not */}
 				<Route path="*" element={<Navigate to="/admin/dashboard" />} />

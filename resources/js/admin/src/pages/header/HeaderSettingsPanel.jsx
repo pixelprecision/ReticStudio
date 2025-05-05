@@ -5,8 +5,8 @@ import MediaChooser from '../../components/media/MediaChooser';
 
 const HeaderSettingsPanel = ({ settings, onSave, saving }) => {
   const [localSettings, setLocalSettings] = useState({
-    logo_url: '',
-    favicon_url: '',
+    logo: '',
+    favicon: '',
     site_name: '',
     show_topbar: false,
     topbar_message: '',
@@ -36,8 +36,9 @@ const HeaderSettingsPanel = ({ settings, onSave, saving }) => {
       console.log('Settings received in panel:', settings);
 
       setLocalSettings({
+        logo: settings.logo || '',
         logo_url: settings.logo_url || '',
-        favicon_url: settings.favicon_url || '',
+        favicon: settings.favicon || '',
         site_name: settings.site_name || '',
         show_topbar: settings.show_topbar || false,
         topbar_message: settings.topbar_message || '',
@@ -57,9 +58,9 @@ const HeaderSettingsPanel = ({ settings, onSave, saving }) => {
       });
 
       // Set favicon preview
-      if (settings.favicon_url) {
-        console.log('Setting favicon preview:', settings.favicon_url);
-        setFaviconPreview(settings.favicon_url);
+      if (settings.favicon) {
+        console.log('Setting favicon preview:', settings.favicon);
+        setFaviconPreview(settings.favicon);
       }
     }
   }, [settings]);
@@ -73,10 +74,12 @@ const HeaderSettingsPanel = ({ settings, onSave, saving }) => {
   };
 
   // Handle logo change from MediaChooser
-  const handleLogoChange = (path) => {
+  const handleLogoChange = (media) => {
+    //console.log(path);
     setLocalSettings({
       ...localSettings,
-      logo_url: path
+      logo: media.path,
+      logo_url: media.url
     });
   };
 
@@ -94,7 +97,7 @@ const HeaderSettingsPanel = ({ settings, onSave, saving }) => {
     setFaviconPreview('');
     setLocalSettings({
       ...localSettings,
-      favicon_url: '',
+      favicon: '',
     });
   };
 
@@ -109,11 +112,11 @@ const HeaderSettingsPanel = ({ settings, onSave, saving }) => {
     // Create a copy of the settings object
     const settingsObj = { ...localSettings };
 
-    // Note: We keep the logo_url in the settings object since it's managed by MediaChooser
+    // Note: We keep the logo in the settings object since it's managed by MediaChooser
     // and will be updated through the API, not through form upload
 
     // Remove only the favicon URL from settings since we handle it manually
-    delete settingsObj.favicon_url;
+    //delete settingsObj.favicon;
 
     // Append all settings to FormData
     Object.keys(settingsObj).forEach(key => {
@@ -154,8 +157,9 @@ const HeaderSettingsPanel = ({ settings, onSave, saving }) => {
             <div className="flex flex-col space-y-4">
               <div className="border border-gray-200 rounded-md p-4">
                 <MediaChooser
-                  value={localSettings.logo_url || ''}
+                  value={localSettings.logo_url || localSettings.logo || ''}
                   onChange={handleLogoChange}
+                  sendBackWholeResponse={true}
                   label="Choose or Upload Logo"
                   accept="image/*"
                   previewType="image"

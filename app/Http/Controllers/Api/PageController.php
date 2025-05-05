@@ -193,6 +193,171 @@ class PageController extends Controller {
 
 		return response()->json($page);
 	}
+	
+	/**
+	 * Get the category index page (all categories)
+	 */
+	public function getCategoryIndexPage() {
+		$page = Page::where('page_type', 'category')
+					->where('is_published', true)
+					->first();
+					
+		if (!$page) {
+			// Create a virtual page for the category index
+			$page = new Page();
+			$page->title = 'Product Categories';
+			$page->slug = 'category';
+			$page->description = 'Browse all product categories';
+			$page->page_type = 'category_index';
+			$page->is_published = true;
+			
+			// Add a default category grid component
+			$page->content = [
+				[
+					'id' => 'category-grid-' . uniqid(),
+					'type' => 'category-grid',
+					'props' => [
+						'title' => 'Product Categories',
+						'subtitle' => 'Browse our wide range of categories',
+						'columns' => 3,
+						'showDescription' => true,
+						'showCount' => true
+					]
+				]
+			];
+		}
+		
+		return response()->json($page);
+	}
+	
+	/**
+	 * Get a single category page
+	 */
+	public function getCategoryPage($slug) {
+		// First check if we have a specific page for this category
+		$page = Page::where('slug', 'category/' . $slug)
+					->where('is_published', true)
+					->first();
+					
+		if (!$page) {
+			// Look for a category template page
+			$templatePage = Page::where('page_type', 'category_template')
+								->where('is_published', true)
+								->first();
+			
+			if (!$templatePage) {
+				// Create a virtual category page
+				$page = new Page();
+				$page->title = ucwords(str_replace('-', ' ', $slug));
+				$page->slug = 'category/' . $slug;
+				$page->description = 'Products in the ' . ucwords(str_replace('-', ' ', $slug)) . ' category';
+				$page->page_type = 'category_single';
+				$page->is_published = true;
+				
+				// Add default product grid component for this category
+				$page->content = [
+					[
+						'id' => 'product-grid-' . uniqid(),
+						'type' => 'product-grid',
+						'props' => [
+							'title' => 'Products in ' . ucwords(str_replace('-', ' ', $slug)),
+							'subtitle' => 'Browse products in this category',
+							'columns' => 3,
+							'categorySlug' => $slug,
+							'showPagination' => true,
+							'perPage' => 12
+						]
+					]
+				];
+			} else {
+				// Use the template but customize for this category
+				$page = $templatePage->replicate();
+				$page->title = ucwords(str_replace('-', ' ', $slug));
+				$page->slug = 'category/' . $slug;
+				$page->description = 'Products in the ' . ucwords(str_replace('-', ' ', $slug)) . ' category';
+				$page->page_type = 'category_single';
+				
+				// Replace category placeholders in the content
+				$content = $page->content;
+				foreach ($content as &$component) {
+					if ($component['type'] === 'product-grid') {
+						$component['props']['categorySlug'] = $slug;
+						$component['props']['title'] = 'Products in ' . ucwords(str_replace('-', ' ', $slug));
+					}
+				}
+				$page->content = $content;
+			}
+		}
+		
+		$page->category_slug = $slug;
+		
+		return response()->json($page);
+	}
+	
+	/**
+	 * Get the product page
+	 */
+	public function getProductPage($slug) {
+		// First check if we have a specific page for this product
+		$page = Page::where('slug', 'product/' . $slug)
+					->where('is_published', true)
+					->first();
+					
+		if (!$page) {
+			// Look for a product template page
+			$templatePage = Page::where('page_type', 'product_template')
+								->where('is_published', true)
+								->first();
+			
+			if (!$templatePage) {
+				// Create a virtual product page
+				$page = new Page();
+				$page->title = ucwords(str_replace('-', ' ', $slug));
+				$page->slug = 'product/' . $slug;
+				$page->description = ucwords(str_replace('-', ' ', $slug)) . ' product details';
+				$page->page_type = 'product_single';
+				$page->is_published = true;
+				
+				// Add default product page component
+				$page->content = [
+					[
+						'id' => 'product-page-' . uniqid(),
+						'type' => 'product-page',
+						'props' => [
+							'slug' => $slug,
+							'showRelatedProducts' => true,
+							'showQuantitySelector' => true,
+							'showBrand' => true,
+							'showCategory' => true,
+							'showSKU' => true,
+							'showShortDescription' => true,
+							'tabSections' => true
+						]
+					]
+				];
+			} else {
+				// Use the template but customize for this product
+				$page = $templatePage->replicate();
+				$page->title = ucwords(str_replace('-', ' ', $slug));
+				$page->slug = 'product/' . $slug;
+				$page->description = ucwords(str_replace('-', ' ', $slug)) . ' product details';
+				$page->page_type = 'product_single';
+				
+				// Replace product placeholders in the content
+				$content = $page->content;
+				foreach ($content as &$component) {
+					if ($component['type'] === 'product-page') {
+						$component['props']['slug'] = $slug;
+					}
+				}
+				$page->content = $content;
+			}
+		}
+		
+		$page->product_slug = $slug;
+		
+		return response()->json($page);
+	}
 
 	/**
 	 * Preview a page by slug (can access unpublished pages)

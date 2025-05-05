@@ -42,10 +42,31 @@ class MediaController extends Controller {
 		$media->getCollection()->transform(function ($item) {
 			// Generate URL compatible with other parts of the app
 			$item->url = url('storage/' . $item->id . '/' . $item->file_name);
-			
-			// Add thumbnail URL for images
+			$item->path = $item->id . '/' . $item->file_name;
+			// Add thumbnail URL for images and videos
 			if (Str::startsWith($item->mime_type, 'image/')) {
 				$item->thumbnail = url('storage/' . $item->id . '/conversions/' . pathinfo($item->file_name, PATHINFO_FILENAME) . '-thumbnail.jpg');
+			} elseif (Str::startsWith($item->mime_type, 'video/')) {
+				// For videos, check if thumbnail was generated
+				$thumbnailPath = $item->id . '/conversions/' . pathinfo($item->file_name, PATHINFO_FILENAME) . '-thumbnail.jpg';
+				if (file_exists(public_path($thumbnailPath))) {
+					$item->thumbnail = url($thumbnailPath);
+					$item->thumbnail_path = $thumbnailPath;
+				} else {
+					// Provide a default video thumbnail
+					$item->thumbnail = url('/storage/default-video-thumbnail.jpg');
+					$item->thumbnail_path = '/default-video-thumbnail.jpg';
+				}
+				
+				// Add media type information
+				$item->media_type = 'video';
+			} elseif (Str::startsWith($item->mime_type, 'audio/')) {
+				// Add media type information for audio
+				$item->media_type = 'audio';
+				$item->thumbnail = url('/storage/default-audio-thumbnail.jpg');
+			} else {
+				// Default media type
+				$item->media_type = 'file';
 			}
 			
 			return $item;
@@ -62,14 +83,14 @@ class MediaController extends Controller {
 		// Validate based on what's present
 		if ($hasFile) {
 			$validator = Validator::make($request->all(), [
-				'file'       => 'required|file|max:10240', // 10MB max
+				'file'       => 'required|file|max:1048576', // 1GB max (1048576 KB)
 				'collection' => 'nullable|string|exists:media_collections,slug',
 				'name'       => 'nullable|string|max:255',
 			]);
 		} elseif ($hasFiles) {
 			$validator = Validator::make($request->all(), [
 				'files'      => 'required|array',
-				'files.*'    => 'file|max:10240', // 10MB max per file
+				'files.*'    => 'file|max:1048576', // 1GB max per file (1048576 KB)
 				'collection' => 'nullable|string|exists:media_collections,slug',
 				'name'       => 'nullable|string|max:255',
 			]);
@@ -90,8 +111,8 @@ class MediaController extends Controller {
 			
 			foreach ($uploadedFiles as $file) {
 				// If collection is specified in request, use it; otherwise, determine by file type
-				$collectionName = $request->input('collection') 
-					? $request->input('collection') 
+				$collectionName = $request->input('collection')
+					? $request->input('collection')
 					: $this->determineCollectionName($file);
 					
 				$media = $this->processMediaFile($file, $collectionName, $customName);
@@ -109,8 +130,8 @@ class MediaController extends Controller {
 			$file = $request->file('file');
 			
 			// If collection is specified in request, use it; otherwise, determine by file type
-			$collectionName = $request->input('collection') 
-				? $request->input('collection') 
+			$collectionName = $request->input('collection')
+				? $request->input('collection')
 				: $this->determineCollectionName($file);
 				
 			$media = $this->processMediaFile($file, $collectionName, $customName);
@@ -133,6 +154,16 @@ class MediaController extends Controller {
 		// Image types
 		if (Str::startsWith($mimeType, 'image/')) {
 			return 'images';
+		}
+		
+		// Video types
+		if (Str::startsWith($mimeType, 'video/')) {
+			return 'videos';
+		}
+		
+		// Audio types
+		if (Str::startsWith($mimeType, 'audio/')) {
+			return 'audio';
 		}
 		
 		// Document types
@@ -178,8 +209,18 @@ class MediaController extends Controller {
 		// Generate URL compatible with other parts of the app
 		$media->url = url('storage/' . $media->id . '/' . $media->file_name);
 		
+		// Add thumbnail URL for images and videos (if applicable)
 		if (Str::startsWith($media->mime_type, 'image/')) {
 			$media->thumbnail = url('storage/' . $media->id . '/conversions/' . pathinfo($media->file_name, PATHINFO_FILENAME) . '-thumbnail.jpg');
+		} elseif (Str::startsWith($media->mime_type, 'video/')) {
+			// For videos, check if thumbnail was generated
+			$thumbnailPath = 'storage/' . $media->id . '/conversions/' . pathinfo($media->file_name, PATHINFO_FILENAME) . '-thumbnail.jpg';
+			if (file_exists(public_path($thumbnailPath))) {
+				$media->thumbnail = url($thumbnailPath);
+			} else {
+				// Provide a default video thumbnail
+				$media->thumbnail = url('/storage/default-video-thumbnail.jpg');
+			}
 		}
 		
 		return $media;
@@ -191,8 +232,21 @@ class MediaController extends Controller {
 		// Generate URL compatible with other parts of the app
 		$media->url = url('storage/' . $media->id . '/' . $media->file_name);
 		
+		// Add thumbnail URL for images and videos
 		if (Str::startsWith($media->mime_type, 'image/')) {
 			$media->thumbnail = url('storage/' . $media->id . '/conversions/' . pathinfo($media->file_name, PATHINFO_FILENAME) . '-thumbnail.jpg');
+		} elseif (Str::startsWith($media->mime_type, 'video/')) {
+			// For videos, check if thumbnail was generated
+			$thumbnailPath = 'storage/' . $media->id . '/conversions/' . pathinfo($media->file_name, PATHINFO_FILENAME) . '-thumbnail.jpg';
+			if (file_exists(public_path($thumbnailPath))) {
+				$media->thumbnail = url($thumbnailPath);
+			} else {
+				// Provide a default video thumbnail
+				$media->thumbnail = url('/storage/default-video-thumbnail.jpg');
+			}
+			
+			// Add video type and duration information if available
+			$media->video_type = $media->mime_type;
 		}
 		
 		return response()->json($media);

@@ -1,5 +1,5 @@
 // resources/js/admin/src/components/pageRenderer/components/VideoHeroComponent.jsx
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 const VideoHeroComponent = ({
 	                            title,
@@ -16,6 +16,30 @@ const VideoHeroComponent = ({
 	                            componentId,
 	                            backgroundColor = 'white',
                             }) => {
+    // Reference to the video element
+    const videoRef = useRef(null);
+
+    // Effect to handle autoplay when videoSrc changes
+    useEffect(() => {
+        if (videoRef.current && videoSrc) {
+            console.log('Video source changed, trying to play:', videoSrc);
+            // Force reload the video element
+            videoRef.current.load();
+            // Try to play the video
+            const playPromise = videoRef.current.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.error('Error auto-playing video:', error);
+                    // Most browsers require user interaction before playing videos with audio
+                    // We've set muted, which should allow autoplay, but just in case:
+                    if (error.name === 'NotAllowedError') {
+                        console.log('Autoplay not allowed, video is muted but still needs user interaction');
+                    }
+                });
+            }
+        }
+    }, [videoSrc]); // Re-run this effect when videoSrc changes
 	// Background color classes
 	const bgColorClasses = {
 		'white': 'bg-white',
@@ -82,11 +106,13 @@ const VideoHeroComponent = ({
 						style={{ "--tw-gradient-from-position": "-101%" }}
 					></div>
 					<video
+						ref={videoRef}
 						className="absolute top-0 right-0 min-w-full min-h-full object-cover"
 						autoPlay
 						loop
 						muted
 						playsInline
+						key={videoSrc} // Add key to force re-render when source changes
 					>
 						<source src={videoSrc} type="video/mp4"/>
 						Your browser does not support the video tag.

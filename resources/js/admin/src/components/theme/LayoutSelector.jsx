@@ -22,18 +22,19 @@ const LAYOUTS = {
  */
 const LayoutSelector = ({ layoutName, children, pageTitle, pageDescription, pageProps = {} }) => {
   const { theme } = useTheme();
-  
+
   // Determine which layout to use
   // Priority: 1. Explicit layoutName prop, 2. Theme's default_layout, 3. Fallback to default
   const layoutKey = layoutName || (theme?.default_layout) || 'default';
-  
+
   // Get the layout component from the registry
   const Layout = LAYOUTS[layoutKey] || LAYOUTS.default;
-  
+
   // Render the selected layout
   return (
-    <Layout 
-      pageTitle={pageTitle} 
+    <Layout
+        layoutName={layoutName}
+      pageTitle={pageTitle}
       pageDescription={pageDescription}
       {...pageProps}
     >

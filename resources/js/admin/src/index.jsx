@@ -6,7 +6,7 @@ import App from './App';
 import './index.css';
 import { AuthProvider } from './store/AuthContext';
 import { AppProvider } from './store/AppContext';
-import {ThemeProvider} from "./store/ThemeContext.jsx";
+import { ThemeProvider } from "./store/ThemeContext.jsx";
 
 // Initialize dropdown handler
 document.addEventListener('DOMContentLoaded', () => {

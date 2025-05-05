@@ -184,7 +184,7 @@ const FooterComponentList = ({
               <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
-                className="space-y-2"
+                className="space-y-6"
               >
                 {filteredComponents.map((component, index) => (
                   <Draggable
@@ -196,7 +196,7 @@ const FooterComponentList = ({
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        className={`border rounded-md p-3 bg-white ${
+                        className={`border rounded-md p-4 my-4 bg-white ${
                           snapshot.isDragging
                             ? 'shadow-lg border-indigo-300'
                             : 'shadow-sm'

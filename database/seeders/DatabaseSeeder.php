@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
 		    UserSeeder::class,
 		    SettingSeeder::class,
 		    ComponentSeeder::class,
+			TailwindImageHeroSeeder::class,
+			StoreComponentSeeder::class,
 		    ThemeSeeder::class,
 		    MediaCollectionSeeder::class,
 		    MenuSeeder::class,

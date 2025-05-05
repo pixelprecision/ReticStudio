@@ -7,7 +7,7 @@ import FooterComponent from '../../pageRenderer/components/FooterComponent';
 
 const MinimalLayout = ({ children, pageTitle, pageDescription }) => {
   const { theme, menus } = useTheme();
-  
+
   if (!theme) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -15,22 +15,22 @@ const MinimalLayout = ({ children, pageTitle, pageDescription }) => {
       </div>
     );
   }
-  
+
   // Extract theme settings
   const {
     name: siteName = 'Website',
     settings = {}
   } = theme;
-  
+
   const {
     colors = {},
     fonts = {},
     layout = {}
   } = settings;
-  
+
   // Calculate container width
   const containerWidth = layout.container_width || '1200px';
-  
+
   // Apply CSS variables for the theme
   React.useEffect(() => {
     if (colors) {
@@ -40,13 +40,13 @@ const MinimalLayout = ({ children, pageTitle, pageDescription }) => {
       document.documentElement.style.setProperty('--color-background', colors.background || '#ffffff');
       document.documentElement.style.setProperty('--color-text', colors.text || '#1f2937');
     }
-    
+
     if (fonts) {
       document.documentElement.style.setProperty('--font-heading', fonts.heading || 'Inter');
       document.documentElement.style.setProperty('--font-body', fonts.body || 'Inter');
     }
   }, [theme]);
-  
+
   // Prepare header settings for minimal style
   const headerSettings = {
     site_name: siteName,
@@ -58,37 +58,24 @@ const MinimalLayout = ({ children, pageTitle, pageDescription }) => {
     show_topbar: false,
     custom_header_classes: 'py-4 border-b border-gray-200 bg-white'
   };
-  
+
   return (
-    <div className="theme-layout minimal-layout min-h-screen flex flex-col">
-      {/* Dynamic Minimal Header */}
-      <HeaderComponent settings={headerSettings} />
-      
+    <div className="theme-layout minimal-layout min-h-screen flex flex-col" data-g={layoutName}>
+
+
       {/* Main Content - Minimal */}
       <main className="flex-grow py-8">
         <div className="container mx-auto px-4" style={{ maxWidth: containerWidth }}>
-          {/* Title area */}
-          {(pageTitle || pageDescription) && (
-            <div className="mb-8 text-center">
-              {pageTitle && <h1 className="text-3xl font-light mb-2">{pageTitle}</h1>}
-              {pageDescription && <div className="text-lg text-gray-600 max-w-2xl mx-auto">{pageDescription}</div>}
-            </div>
-          )}
-          
+
+
           {/* Content area - clean and minimal */}
           <div className="mx-auto max-w-4xl">
             {children}
           </div>
         </div>
       </main>
-      
-      {/* Dynamic Footer - Minimal Style */}
-      <FooterComponent settings={{
-        site_name: siteName,
-        container_width: containerWidth,
-        footer_style: 'minimal',
-        custom_footer_classes: 'py-6 border-t border-gray-200 bg-white'
-      }} />
+
+
     </div>
   );
 };

@@ -1,6 +1,7 @@
 // resources/js/admin/src/pages/PublicPage/PublicPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { getPublicPage, getPreviewPage, getHomePage } from '../../api/pagesApi';
 import { getPublicMenu } from '../../api/menusApi';
 import { getActiveTheme } from '../../api/themesApi';
@@ -11,7 +12,7 @@ import ThemeTemplateRenderer from '../../components/theme/ThemeTemplateRenderer'
 import { ThemeProvider } from '../../store/ThemeContext';
 import ReactThemeRenderer from "../../components/theme/ReactThemeRenderer.jsx";
 
-const PublicPage = ({ isPreview = false, isHomePage = false }) => {
+const PublicPage = ({ isPreview = false, isHomePage = false, pageType = null }) => {
   const { slug } = useParams();
   const navigate = useNavigate();
 
@@ -28,12 +29,24 @@ const PublicPage = ({ isPreview = false, isHomePage = false }) => {
         let pageResponse;
           console.log("IS HOME PAGE", window.isHomePage);
 
-        // Check if we're on the homepage (using the flag set in the preview.blade.php)
-        if (isHomePage || window.isHomePage) {
+        // Handle different page types
+        if (pageType === 'category_index') {
+          // Get category index page
+          pageResponse = await axios.get('/api/pages/category');
+        } else if (pageType === 'category_single' && slug) {
+          // Get specific category page
+          pageResponse = await axios.get(`/api/pages/category/${slug}`);
+        } else if (pageType === 'product_single' && slug) {
+          // Get specific product page
+          pageResponse = await axios.get(`/api/pages/product/${slug}`);
+        } else if (isHomePage || window.isHomePage) {
+          // Get homepage
           pageResponse = await getHomePage();
         } else if (isPreview) {
+          // Get preview page
           pageResponse = await getPreviewPage(slug);
         } else {
+          // Get regular page
           pageResponse = await getPublicPage(slug);
         }
 
@@ -66,10 +79,11 @@ const PublicPage = ({ isPreview = false, isHomePage = false }) => {
     };
 
     // For homepage, we don't need a slug
-    if (slug || window.isHomePage || isHomePage) {
+    // For category index page, we don't need a slug either
+    if (slug || window.isHomePage || isHomePage || pageType === 'category_index') {
       fetchPageData();
     }
-  }, [slug, isPreview, isHomePage]);
+  }, [slug, isPreview, isHomePage, pageType]);
 
   if (loading) {
     return (
@@ -110,31 +124,29 @@ const PublicPage = ({ isPreview = false, isHomePage = false }) => {
   }
 
   return (
-      <ThemeProvider>
-        <div className="public-page">
-          {isPreview && (
-              <div className="bg-blue-600 text-white p-3 text-center sticky top-0 z-50">
-                Preview Mode - This page may not be published
-                <button
-                    onClick={() => navigate(-1)}
-                    className="ml-4 px-3 py-1 bg-white text-blue-600 rounded-lg text-sm"
-                >
-                  Back to Editor
-                </button>
-              </div>
-          )}
+    <>
+      {isPreview && (
+          <div className="bg-blue-600 text-white p-3 text-center sticky top-0 z-50">
+            Preview Mode - This page may not be published
+            <button
+                onClick={() => navigate(-1)}
+                className="ml-4 px-3 py-1 bg-white text-blue-600 rounded-lg text-sm"
+            >
+              Back to Editor
+            </button>
+          </div>
+      )}
 
-          {/* Pass page to ReactThemeRenderer to respect page's layout preference */}
-          <ReactThemeRenderer 
-            pageType={page.type}
-            page={page}
-            pageTitle={page.title}
-            pageDescription={page.description}
-          >
-            <PageRenderer content={page.content} />
-          </ReactThemeRenderer>
-        </div>
-      </ThemeProvider>
+      {/* Directly render the page content - the layout is now handled by PublicLayout */}
+        <ReactThemeRenderer page={page} pageType={page.type}>
+            <PageRenderer
+                content={page.content}
+                pageType={page.type}
+                pageData={page}
+            />
+        </ReactThemeRenderer>
+
+    </>
   );
 };
 

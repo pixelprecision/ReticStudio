@@ -136,7 +136,7 @@ const HeaderEditor = () => {
       const settingsObj = {};
       for (let [key, value] of formData.entries()) {
         // Skip files
-        if (key === 'logo' || key === 'favicon') continue;
+       // if (key === 'logo' || key === 'favicon') continue;
 
         // Convert "0" and "1" strings to proper booleans for boolean fields
         if (value === '1' || value === '0') {
@@ -201,7 +201,7 @@ const HeaderEditor = () => {
   const handleEditComponent = (component) => {
     // Clone the component to avoid modifying the original
     const componentToEdit = { ...component };
-    
+
     // Make sure the component has the header_layout_id
     if (!componentToEdit.header_layout_id && headerData.activeLayoutId) {
       componentToEdit.header_layout_id = headerData.activeLayoutId;
@@ -375,7 +375,7 @@ const HeaderEditor = () => {
       const componentOrder = updatedComponents.map((comp, index) => ({
         id: comp.id,
         position: position, // Make sure position is included for each component
-        order: index
+        order: index + 1
       }));
 
       console.log('Sending reordering request with data:', componentOrder);

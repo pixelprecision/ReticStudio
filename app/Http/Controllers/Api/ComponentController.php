@@ -33,7 +33,7 @@
 			
 			$components = $query->orderBy('category')
 			                    ->orderBy('name')
-			                    ->paginate($request->input('per_page', 15));
+			                    ->paginate($request->input('per_page', 30));
 			
 			return response()->json($components);
 		}

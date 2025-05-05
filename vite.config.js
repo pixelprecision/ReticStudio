@@ -13,6 +13,11 @@ export default defineConfig({
                                     rollupOptions: {
                                         input: './resources/js/admin/index.html', // ✅ FIXED HERE
                                     },
+                                    // Ensure big modules like Monaco Editor are handled correctly
+                                    chunkSizeWarningLimit: 2000,
+                                },
+                                optimizeDeps: {
+                                    include: ['monaco-editor']
                                 },
                                 server: {
                                     proxy: {

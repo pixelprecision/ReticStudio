@@ -7,7 +7,7 @@ import ErrorScreen from './ErrorScreen';
 
 /**
  * Main React theme renderer component
- * Uses the LayoutSelector to choose the appropriate layout based on page preference, 
+ * Uses the LayoutSelector to choose the appropriate layout based on page preference,
  * theme settings or page type
  */
 const ReactThemeRenderer = ({ children, pageType = 'page', pageTitle, pageDescription, page = null }) => {
@@ -31,7 +31,7 @@ const ReactThemeRenderer = ({ children, pageType = 'page', pageTitle, pageDescri
 
 	// Determine layout based on page preference, page type and theme settings
 	let layoutName;
-	
+
 	// Check if the page has a specific layout preference
 	if (page && page.layout) {
 		// If the page has a layout preference, use it
@@ -58,6 +58,8 @@ const ReactThemeRenderer = ({ children, pageType = 'page', pageTitle, pageDescri
 		layoutName = 'default';
 		console.log('Using fallback default layout:', layoutName);
 	}
+
+	console.log('LAYOUT', layoutName);
 
 	return (
 		<LayoutSelector
